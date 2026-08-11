@@ -37,6 +37,27 @@ export default defineAppConfig({
         td: 'px-3 py-2.5 text-base font-normal'
       }
     },
+    /*
+     * Пункты меню просторнее стандартных — и по вертикали, и по бокам.
+     *
+     * Уменьшенный gap — про содержимое страницы, а не про выпадающие меню:
+     * здесь ряды короткие, и тесные отступы делают их не плотными,
+     * а слипшимися. Подложка под наведением упирается в край панели, если
+     * не дать группе собственного поля.
+     */
+    dropdownMenu: {
+      slots: {
+        group: 'p-1.5'
+      },
+      variants: {
+        size: {
+          md: {
+            label: 'px-3 py-2 text-sm gap-2',
+            item: 'px-3 py-2 text-sm gap-2'
+          }
+        }
+      }
+    },
     navigationMenu: {
       slots: {
         link: 'font-normal text-base text-muted',
