@@ -1,0 +1,43 @@
+{
+  "name": "events-client",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --port 3010",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "generate": "nuxt generate",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@fullcalendar/core": "^6.1.21",
+    "@fullcalendar/daygrid": "^6.1.21",
+    "@fullcalendar/interaction": "^6.1.21",
+    "@fullcalendar/list": "^6.1.21",
+    "@fullcalendar/timegrid": "^6.1.21",
+    "@fullcalendar/vue3": "^6.1.21",
+    "@iconify-json/lucide": "^1.2.101",
+    "@iconify-json/simple-icons": "^1.2.77",
+    "@internationalized/date": "^3.12.3",
+    "@nuxt/fonts": "^0.14.0",
+    "@nuxt/ui": "^4.6.1",
+    "@pinia/nuxt": "^0.11.3",
+    "@vueuse/nuxt": "^14.2.1",
+    "maplibre-gl": "^6.3.0",
+    "nuxt": "^4.5.2",
+    "nuxt-auth-sanctum": "^3.1.0",
+    "tailwindcss": "^4.2.2",
+    "vue": "^3.5.41",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.15.2",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.4.0",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.2.6"
+  },
+  "packageManager": "pnpm@10.32.1"
+}
