@@ -90,6 +90,14 @@ class LeadController extends Controller
         ]);
     }
 
+    /** Одна заявка целиком: контакты, сообщение и вся её история. */
+    public function show(Request $request, Lead $lead): MasterLeadData
+    {
+        $this->authorizeLead($request, $lead);
+
+        return MasterLeadData::fromModel($lead->load(['event:id,title,slug', 'statusChanges.user:id,name']));
+    }
+
     /**
      * Мастер двигает заявку по её пути и объясняет почему.
      *
@@ -99,9 +107,7 @@ class LeadController extends Controller
      */
     public function updateStatus(Request $request, Lead $lead): JsonResponse
     {
-        $master = $request->user()->master;
-
-        abort_if($master === null || $lead->master_id !== $master->id, 403);
+        $this->authorizeLead($request, $lead);
 
         $validated = $request->validate([
             'status' => ['required', Rule::enum(LeadStatus::class)],
@@ -131,6 +137,14 @@ class LeadController extends Controller
         $lead->load(['event:id,title,slug', 'statusChanges.user:id,name']);
 
         return response()->json(MasterLeadData::fromModel($lead));
+    }
+
+    /** Чужая заявка — не «не найдено», а «не ваше»: врать об этом незачем. */
+    private function authorizeLead(Request $request, Lead $lead): void
+    {
+        $master = $request->user()->master;
+
+        abort_if($master === null || $lead->master_id !== $master->id, 403);
     }
 
     /**
@@ -168,12 +182,16 @@ class LeadController extends Controller
     }
 
     /**
-     * @return array<int, array{value: string, label: string}>
+     * @return array<int, array{value: string, label: string, color: string}>
      */
     private function statuses(): array
     {
         return array_map(
-            fn (LeadStatus $status): array => ['value' => $status->value, 'label' => $status->label()],
+            fn (LeadStatus $status): array => [
+                'value' => $status->value,
+                'label' => $status->label(),
+                'color' => $status->color(),
+            ],
             LeadStatus::cases(),
         );
     }

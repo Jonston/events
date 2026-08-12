@@ -12,6 +12,9 @@ export default defineAppConfig({
       primary: 'forest',
       secondary: 'coral',
       success: 'emerald',
+      // Синий добавлен ради статусов заявки: «новая» ничего не значит
+      // ни зелёным, ни коралловым — они уже заняты брендом и действием.
+      info: 'blue',
       warning: 'amber',
       error: 'rose',
       neutral: 'stone'

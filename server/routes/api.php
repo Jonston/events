@@ -42,6 +42,11 @@ Route::post('/leads', [LeadController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('api.leads.store');
 
+// Открытие страницы мероприятия: показывать форму или отметку «вы записаны».
+Route::get('/leads/check', [LeadController::class, 'check'])
+    ->middleware('throttle:60,1')
+    ->name('api.leads.check');
+
 /*
 |--------------------------------------------------------------------------
 | Аккаунт и кабинеты
@@ -94,6 +99,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::delete('/events/{event:id}', [MasterEventController::class, 'destroy'])->name('events.destroy');
 
             Route::get('/leads', [MasterLeadController::class, 'index'])->name('leads.index');
+            Route::get('/leads/{lead}', [MasterLeadController::class, 'show'])->name('leads.show');
             Route::patch('/leads/{lead}/status', [MasterLeadController::class, 'updateStatus'])->name('leads.status');
 
             Route::get('/reviews', [MasterReviewController::class, 'index'])->name('reviews.index');

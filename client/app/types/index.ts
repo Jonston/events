@@ -145,6 +145,8 @@ export interface LeadPayload {
   message?: string
   eventId?: number | null
   masterId?: number | null
+  /** Метка браузера гостя — по ней не принимают вторую заявку. */
+  guestKey?: string
 }
 
 /* ── Кабинет мастера ──────────────────────────────────────────────────── */
@@ -234,6 +236,8 @@ export interface MasterOverview {
 export interface LeadStatus {
   value: string
   label: string
+  /** Цвет приходит с сервера вместе со статусом — см. LeadStatus::color(). */
+  color: string
 }
 
 /** Одна запись в истории заявки: откуда, куда, кто и что сказал. */
@@ -243,6 +247,7 @@ export interface LeadStatusChange {
   fromLabel: string | null
   toStatus: string
   toLabel: string
+  toColor: string
   comment: string | null
   author: string | null
   createdAt: string
@@ -256,6 +261,7 @@ export interface MasterLead {
   message: string | null
   status: string
   statusLabel: string
+  statusColor: string
   eventId: number | null
   eventTitle: string | null
   eventSlug: string | null

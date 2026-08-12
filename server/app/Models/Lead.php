@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'master_id', 'event_id', 'user_id', 'name', 'phone', 'email', 'message',
+    'master_id', 'event_id', 'user_id', 'guest_key', 'name', 'phone', 'email', 'message',
     'source', 'status', 'client_ip', 'client_user_agent', 'landing_url',
 ])]
 class Lead extends Model

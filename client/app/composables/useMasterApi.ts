@@ -37,6 +37,9 @@ export function useMasterApi() {
   const fetchLeads = (query: LeadQuery = {}): Promise<LeadsPage> =>
     api<LeadsPage>('/api/master/leads', { query: toListQuery(query) })
 
+  const fetchLead = (id: number): Promise<MasterLead> =>
+    api<MasterLead>(`/api/master/leads/${id}`)
+
   const setLeadStatus = (id: number, status: string, comment?: string): Promise<MasterLead> =>
     api<MasterLead>(`/api/master/leads/${id}/status`, {
       method: 'PATCH',
@@ -56,6 +59,7 @@ export function useMasterApi() {
     updateEvent,
     deleteEvent,
     fetchLeads,
+    fetchLead,
     setLeadStatus,
     fetchReviews
   }

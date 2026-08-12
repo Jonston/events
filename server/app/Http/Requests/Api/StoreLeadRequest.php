@@ -29,6 +29,9 @@ class StoreLeadRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255'],
             'message' => ['nullable', 'string', 'max:5000'],
             'eventId' => ['nullable', 'integer', 'exists:events,id'],
+            // Метка браузера гостя: по ней не принимаем вторую заявку
+            // на то же мероприятие.
+            'guestKey' => ['nullable', 'string', 'max:64'],
             'masterId' => ['nullable', 'integer', 'exists:masters,id'],
             // Ловушка для ботов: человек этого поля не видит и не заполняет,
             // поэтому заполненное — признак автоматической отправки.

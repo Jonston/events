@@ -125,6 +125,74 @@ class ShowcaseTest extends TestCase
         $this->assertSame($member->id, Lead::sole()->user_id);
     }
 
+    public function test_second_lead_for_the_same_event_is_refused(): void
+    {
+        $event = $this->event($this->master());
+
+        $payload = ['name' => 'Пётр', 'phone' => '+380671112233', 'eventId' => $event->id, 'guestKey' => 'abc123'];
+
+        $this->postJson('/api/leads', $payload)->assertCreated();
+
+        // Тот же браузер, то же мероприятие: вторая заявка ничего не добавляет,
+        // а мастеру достаётся два одинаковых контакта.
+        $this->postJson('/api/leads', $payload)
+            ->assertStatus(409)
+            ->assertJsonPath('applied', true);
+
+        $this->assertSame(1, Lead::count());
+    }
+
+    public function test_the_same_guest_may_apply_to_another_event(): void
+    {
+        $master = $this->master();
+        $first = $this->event($master);
+        $second = $this->event($master, ['slug' => 'vtoroe', 'title' => 'Второе']);
+
+        foreach ([$first, $second] as $event) {
+            $this->postJson('/api/leads', [
+                'name' => 'Пётр',
+                'phone' => '+380671112233',
+                'eventId' => $event->id,
+                'guestKey' => 'abc123',
+            ])->assertCreated();
+        }
+
+        $this->assertSame(2, Lead::count());
+    }
+
+    public function test_check_tells_the_page_whether_to_show_the_form(): void
+    {
+        $event = $this->event($this->master());
+
+        $this->getJson("/api/leads/check?eventId={$event->id}&guestKey=abc123")
+            ->assertOk()
+            ->assertJsonPath('applied', false);
+
+        $this->postJson('/api/leads', [
+            'name' => 'Пётр', 'phone' => '+380671112233', 'eventId' => $event->id, 'guestKey' => 'abc123',
+        ])->assertCreated();
+
+        $this->getJson("/api/leads/check?eventId={$event->id}&guestKey=abc123")
+            ->assertOk()
+            ->assertJsonPath('applied', true);
+    }
+
+    public function test_a_signed_in_member_is_recognised_without_the_browser_key(): void
+    {
+        $event = $this->event($this->master());
+        $member = User::factory()->create();
+        $token = $member->createToken('test')->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)->postJson('/api/leads', [
+            'name' => $member->name, 'phone' => '+380671112233', 'eventId' => $event->id, 'guestKey' => 'first',
+        ])->assertCreated();
+
+        // Другой браузер, тот же аккаунт — заявка всё равно вторая.
+        $this->withHeader('Authorization', 'Bearer '.$token)->postJson('/api/leads', [
+            'name' => $member->name, 'phone' => '+380509998877', 'eventId' => $event->id, 'guestKey' => 'second',
+        ])->assertStatus(409);
+    }
+
     public function test_lead_requires_a_phone(): void
     {
         $this->postJson('/api/leads', ['name' => 'Пётр'])

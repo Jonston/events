@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
+import type { BadgeProps, TableColumn } from '@nuxt/ui'
 import type { MasterLead } from '~/types'
 
 const props = defineProps<{
@@ -13,14 +13,6 @@ const emit = defineEmits<{
   sort: [column: string]
   open: [lead: MasterLead]
 }>()
-
-/** Цвет статуса: бронь — то, ради чего всё, спам — то, что не жалко. */
-const statusColor: Record<string, 'primary' | 'success' | 'warning' | 'neutral'> = {
-  new: 'primary',
-  booked: 'success',
-  refunded: 'warning',
-  spam: 'neutral'
-}
 
 function sortIcon(column: string): string {
   if (props.sort !== column) return 'i-lucide-chevrons-up-down'
@@ -86,7 +78,10 @@ const columns: TableColumn<MasterLead>[] = [
 
     <template #name-cell="{ row }">
       <div class="min-w-0">
-        <p class="flex items-center gap-2 text-highlighted">
+        <NuxtLink
+          :to="`/master/leads/${row.original.id}`"
+          class="flex items-center gap-2 text-highlighted hover:text-primary"
+        >
           {{ row.original.name }}
           <UIcon
             v-if="row.original.fromMember"
@@ -94,7 +89,7 @@ const columns: TableColumn<MasterLead>[] = [
             class="size-4 shrink-0 text-primary"
             title="Оставил вошедший участник"
           />
-        </p>
+        </NuxtLink>
         <p class="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm">
           <a
             v-if="row.original.phone"
@@ -132,8 +127,10 @@ const columns: TableColumn<MasterLead>[] = [
     </template>
 
     <template #status-cell="{ row }">
+      <!-- Цвет приходит вместе со статусом: иначе новый статус появлялся бы
+           на экране серым, пока кто-нибудь не вспомнит про вторую таблицу. -->
       <UBadge
-        :color="statusColor[row.original.status] ?? 'neutral'"
+        :color="(row.original.statusColor as BadgeProps['color'])"
         variant="subtle"
         size="lg"
       >
@@ -146,16 +143,26 @@ const columns: TableColumn<MasterLead>[] = [
     </template>
 
     <template #actions-cell="{ row }">
-      <UButton
-        color="neutral"
-        variant="outline"
-        size="sm"
-        icon="i-lucide-pencil-line"
-        :aria-label="`Изменить статус заявки от ${row.original.name}`"
-        @click="emit('open', row.original)"
-      >
-        Статус
-      </UButton>
+      <div class="flex justify-end gap-2">
+        <UButton
+          color="neutral"
+          variant="outline"
+          size="sm"
+          icon="i-lucide-pencil-line"
+          :aria-label="`Изменить статус заявки от ${row.original.name}`"
+          @click="emit('open', row.original)"
+        >
+          Статус
+        </UButton>
+        <UButton
+          :to="`/master/leads/${row.original.id}`"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          icon="i-lucide-arrow-right"
+          :aria-label="`Открыть заявку от ${row.original.name}`"
+        />
+      </div>
     </template>
 
     <template #empty>

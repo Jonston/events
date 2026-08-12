@@ -24,7 +24,9 @@ export default defineNuxtConfig({
 
   ui: {
     theme: {
-      colors: ['primary', 'secondary', 'success', 'warning', 'error', 'neutral']
+      // `info` заведён ради статусов заявки: без него синему бейджу
+      // неоткуда взяться — набор псевдонимов задаётся здесь, а не в app.config.
+      colors: ['primary', 'secondary', 'success', 'info', 'warning', 'error', 'neutral']
     }
   },
 

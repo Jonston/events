@@ -33,5 +33,9 @@ export function useShowcaseApi() {
       body: payload
     })
 
-  return { fetchHome, fetchMasters, fetchMaster, fetchEvents, fetchEvent, sendLead }
+  /** Оставлял ли этот человек заявку на это мероприятие. */
+  const checkLead = (eventId: number, guestKey: string): Promise<{ applied: boolean }> =>
+    client<{ applied: boolean }>(`${baseUrl}/api/leads/check`, { query: { eventId, guestKey } })
+
+  return { fetchHome, fetchMasters, fetchMaster, fetchEvents, fetchEvent, sendLead, checkLead }
 }

@@ -15,6 +15,7 @@ namespace App\Enums;
 enum LeadStatus: string
 {
     case New = 'new';
+    case Warm = 'warm';
     case Booked = 'booked';
     case Refunded = 'refunded';
     case Spam = 'spam';
@@ -23,9 +24,30 @@ enum LeadStatus: string
     {
         return match ($this) {
             self::New => 'Новая',
+            self::Warm => 'Тёплый',
             self::Booked => 'Бронь',
             self::Refunded => 'Возврат',
             self::Spam => 'Спам',
+        };
+    }
+
+    /**
+     * Цвет статуса приходит с сервера вместе с ним.
+     *
+     * Иначе список статусов задан в одном месте, а их вид — в другом,
+     * и новый статус появляется на экране серым, пока кто-нибудь
+     * не вспомнит про вторую таблицу соответствий.
+     */
+    public function color(): string
+    {
+        return match ($this) {
+            // Синий — «поступила, ещё не в работе»: заметно, но без тревоги.
+            self::New => 'info',
+            // Оранжевый — разговор идёт, место пока не занято.
+            self::Warm => 'warning',
+            self::Booked => 'success',
+            self::Refunded => 'error',
+            self::Spam => 'neutral',
         };
     }
 

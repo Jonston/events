@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BadgeProps } from '@nuxt/ui'
 import type { LeadStatus, MasterLead } from '~/types'
 
 /**
@@ -113,10 +114,21 @@ async function submit() {
               :key="change.id"
               class="text-sm"
             >
-              <p class="text-toned">
+              <p class="flex flex-wrap items-center gap-1.5 text-toned">
                 <template v-if="change.fromLabel">
-                  {{ change.fromLabel }} →
-                </template>{{ change.toLabel }}
+                  <span class="text-dimmed">{{ change.fromLabel }}</span>
+                  <UIcon
+                    name="i-lucide-arrow-right"
+                    class="size-3.5 text-dimmed"
+                  />
+                </template>
+                <UBadge
+                  :color="(change.toColor as BadgeProps['color'])"
+                  variant="subtle"
+                  size="sm"
+                >
+                  {{ change.toLabel }}
+                </UBadge>
               </p>
               <p
                 v-if="change.comment"

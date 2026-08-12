@@ -15,6 +15,7 @@ class LeadStatusChangeData extends Data
         public ?string $fromLabel,
         public string $toStatus,
         public string $toLabel,
+        public string $toColor,
         public ?string $comment,
         /** Кто перевёл. Null — запись появилась без участия человека. */
         public ?string $author,
@@ -29,6 +30,7 @@ class LeadStatusChangeData extends Data
             fromLabel: $change->from_status?->label(),
             toStatus: $change->to_status->value,
             toLabel: $change->to_status->label(),
+            toColor: $change->to_status->color(),
             comment: $change->comment,
             author: $change->user?->name,
             createdAt: $change->created_at->toIso8601String(),
