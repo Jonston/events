@@ -58,6 +58,22 @@ export default defineAppConfig({
         }
       }
     },
+    /*
+     * Кнопки заужены по бокам в дефолтной теме — текст почти впритык
+     * к краю. Горизонтальный паддинг увеличен на ступень для каждого
+     * размера, вертикальный не трогаем.
+     */
+    button: {
+      variants: {
+        size: {
+          xs: { base: 'px-3' },
+          sm: { base: 'px-4' },
+          md: { base: 'px-4' },
+          lg: { base: 'px-5' },
+          xl: { base: 'px-5' }
+        }
+      }
+    },
     navigationMenu: {
       slots: {
         link: 'font-normal text-base text-muted',

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Photo } from '~/types'
+
 const route = useRoute()
 const slug = computed(() => String(route.params.slug))
 
@@ -14,6 +16,19 @@ if (!data.value) {
 
 const event = computed(() => data.value!.card)
 const detail = computed(() => data.value!)
+
+/*
+ * Обложка идёт первой, за ней галерея: на странице это одна лента снимков,
+ * и разница между «главным кадром» и «остальными» существует только
+ * в кабинете, где обложка отвечает ещё и за карточку в каталоге.
+ */
+const photos = computed<Photo[]>(() => [
+  ...(event.value.image ? [{ thumb: event.value.image, full: event.value.image }] : []),
+  ...detail.value.gallery
+])
+
+/** Индекс открытого кадра; null — лайтбокс закрыт. */
+const openAt = ref<number | null>(null)
 
 useHead({ title: () => event.value.title })
 </script>
@@ -73,20 +88,21 @@ useHead({ title: () => event.value.title })
            а не сидит на фиксированных 24rem. -->
       <div class="grid gap-9 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div>
-          <div
-            v-if="event.image"
-            class="overflow-hidden rounded-3xl"
-          >
-            <img
-              :src="event.image"
-              :alt="event.title"
-              class="w-full object-cover"
-            >
-          </div>
+          <ShowcaseEventGallery
+            v-if="photos.length"
+            :photos="photos"
+            :title="event.title"
+            @open="openAt = $event"
+          />
+
+          <Lightbox
+            v-model="openAt"
+            :items="photos"
+          />
 
           <dl
             class="grid gap-5 rounded-2xl bg-white p-5 ring-1 ring-forest-100 sm:grid-cols-2 lg:grid-cols-3"
-            :class="event.image ? 'mt-6' : ''"
+            :class="photos.length ? 'mt-6' : ''"
           >
             <div class="flex gap-3">
               <UIcon

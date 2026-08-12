@@ -255,6 +255,71 @@ class MasterCabinetTest extends TestCase
         $this->assertAbsoluteUrl($response->json('photo'));
     }
 
+    public function test_gallery_keeps_order_and_drops_what_was_removed(): void
+    {
+        $this->fakePublicDisk();
+        $master = $this->master();
+
+        $created = $this->actingAs($master, 'sanctum')->post('/api/master/events', $this->payload([
+            'gallery' => [
+                ['file' => UploadedFile::fake()->image('one.jpg', 800, 600)],
+                ['file' => UploadedFile::fake()->image('two.jpg', 800, 600)],
+                ['file' => UploadedFile::fake()->image('three.jpg', 800, 600)],
+            ],
+        ]))->assertCreated();
+
+        $ids = array_column($created->json('gallery'), 'id');
+        $this->assertCount(3, $ids);
+        $this->assertAbsoluteUrl($created->json('gallery.0.thumb'));
+
+        $event = Event::firstOrFail();
+
+        // Второй снимок выброшен, оставшиеся идут задом наперёд, и к ним
+        // добавлен новый: форма присылает галерею целиком, а не список правок.
+        $updated = $this->actingAs($master, 'sanctum')->post("/api/master/events/{$event->id}", $this->payload([
+            'gallery' => [
+                ['id' => $ids[2]],
+                ['file' => UploadedFile::fake()->image('four.jpg', 800, 600)],
+                ['id' => $ids[0]],
+            ],
+        ]))->assertOk();
+
+        $names = $event->refresh()->getMedia('gallery')->pluck('file_name')->all();
+        $this->assertSame(['three.jpg', 'four.jpg', 'one.jpg'], $names);
+
+        // Снимок ушёл не только из списка, но и с диска.
+        Storage::disk('public')->assertMissing($ids[1].'/two.jpg');
+    }
+
+    public function test_gallery_arrives_when_the_form_sends_files_only(): void
+    {
+        $this->fakePublicDisk();
+        $master = $this->master();
+
+        // Так галерею присылает браузер: у нового снимка нет ничего, кроме
+        // файла, и в обычных полях запроса его не видно совсем.
+        $this->actingAs($master, 'sanctum')->call(
+            'POST',
+            '/api/master/events',
+            $this->payload(),
+            [],
+            ['gallery' => [['file' => UploadedFile::fake()->image('one.jpg', 800, 600)]]],
+            ['HTTP_ACCEPT' => 'application/json'],
+        )->assertCreated();
+
+        $this->assertCount(1, Event::firstOrFail()->getMedia('gallery'));
+    }
+
+    public function test_gallery_item_without_id_and_file_is_rejected(): void
+    {
+        $this->fakePublicDisk();
+        $master = $this->master();
+
+        $this->actingAs($master, 'sanctum')->post('/api/master/events', $this->payload([
+            'gallery' => [['caption' => 'без файла']],
+        ]))->assertStatus(422)->assertJsonValidationErrors('gallery.0.file');
+    }
+
     public function test_multiline_text_is_stored_without_carriage_returns(): void
     {
         $master = $this->master();

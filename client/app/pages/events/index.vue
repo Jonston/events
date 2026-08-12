@@ -26,7 +26,7 @@ const events = computed(() => data.value?.data ?? [])
     <div class="mx-auto max-w-page px-6 py-11">
       <div
         v-if="events.length"
-        class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
         <ShowcaseEventCard
           v-for="event in events"

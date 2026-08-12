@@ -36,7 +36,8 @@ class MasterController extends Controller
         // У `load` замыкание получает связь, а не построитель запроса —
         // отсюда другой тип, чем у `withCount` ниже.
         $master->load([
-            'events' => fn (Relation $relation) => $relation->published()->upcoming()->with('master'),
+            'media',
+            'events' => fn (Relation $relation) => $relation->published()->upcoming()->with(['master', 'media']),
             'reviews' => fn (Relation $relation) => $relation->published()->with('user')->latest(),
         ]);
         $master->loadCount(['reviews' => fn (Builder $query) => $query->published()]);

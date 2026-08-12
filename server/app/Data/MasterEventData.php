@@ -18,6 +18,7 @@ class MasterEventData extends Data
 {
     /**
      * @param  array<int, array{day: string, startsAt: string, endsAt: string|null, title: string, note: string|null}>  $sessions
+     * @param  array<int, EventPhotoData>  $gallery
      */
     public function __construct(
         public int $id,
@@ -38,6 +39,7 @@ class MasterEventData extends Data
         public bool $isPublished,
         public int $leadsCount,
         public array $sessions,
+        public array $gallery,
     ) {}
 
     public static function fromModel(Event $event): self
@@ -70,6 +72,7 @@ class MasterEventData extends Data
                 'title' => $session->title,
                 'note' => $session->note,
             ])->all(),
+            gallery: EventPhotoData::galleryOf($event),
         );
     }
 }

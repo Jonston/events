@@ -16,12 +16,14 @@ class EventDetailData extends Data
 {
     /**
      * @param  array<int, array{day: string, items: array<int, array{time: string, title: string, note: string|null}>}>  $schedule
+     * @param  array<int, EventPhotoData>  $gallery
      */
     public function __construct(
         public EventCardData $card,
         public ?string $description,
         public ?int $capacity,
         public array $schedule,
+        public array $gallery,
         public string $depositFormatted,
         public string $remainingFormatted,
         public string $refundDeadline,
@@ -34,6 +36,7 @@ class EventDetailData extends Data
             description: $event->description,
             capacity: $event->capacity,
             schedule: self::schedule($event),
+            gallery: EventPhotoData::galleryOf($event),
             depositFormatted: EventCardData::money($event->depositAmount()),
             remainingFormatted: EventCardData::money($event->remainingAmount()),
             refundDeadline: $event->refundDeadline()->toIso8601String(),

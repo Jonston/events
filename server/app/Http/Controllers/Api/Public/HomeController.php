@@ -30,13 +30,14 @@ class HomeController extends Controller
             ->withCount(['events' => fn (Builder $query) => $query->published()->upcoming()])
             ->withCount(['reviews' => fn (Builder $query) => $query->published()])
             ->withAvg(['reviews' => fn (Builder $query) => $query->published()], 'rating')
+            ->with('media')
             ->limit(self::MASTERS_LIMIT)
             ->get();
 
         $events = Event::query()
             ->published()
             ->upcoming()
-            ->with('master')
+            ->with(['master', 'media'])
             ->limit(self::EVENTS_LIMIT)
             ->get();
 

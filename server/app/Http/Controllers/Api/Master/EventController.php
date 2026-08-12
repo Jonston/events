@@ -30,7 +30,7 @@ class EventController extends Controller
 
         $events = $master->events()
             ->withCount('leads')
-            ->with('sessions')
+            ->with(['sessions', 'media'])
             // Черновики и прошедшее тоже здесь: кабинет — рабочий стол,
             // а не витрина, и спрятать от мастера то, что он ещё не издал,
             // значило бы спрятать от него его же работу.
@@ -46,7 +46,7 @@ class EventController extends Controller
     {
         $this->authorize('update', $event);
 
-        $event->load('sessions')->loadCount('leads');
+        $event->load(['sessions', 'media'])->loadCount('leads');
 
         return MasterEventData::fromModel($event);
     }
@@ -60,10 +60,11 @@ class EventController extends Controller
             $this->master($request),
             $request->validated(),
             $request->file('image'),
+            $request->gallery(),
         );
 
         return response()->json(
-            MasterEventData::fromModel($event->load('sessions')),
+            MasterEventData::fromModel($event->load(['sessions', 'media'])),
             201,
         );
     }
@@ -85,10 +86,11 @@ class EventController extends Controller
             $event->master,
             $request->validated(),
             $request->file('image'),
+            $request->gallery(),
         );
 
         return response()->json(
-            MasterEventData::fromModel($event->load('sessions')->loadCount('leads')),
+            MasterEventData::fromModel($event->load(['sessions', 'media'])->loadCount('leads')),
         );
     }
 

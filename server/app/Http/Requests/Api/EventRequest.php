@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Requests\Api;
 
 use App\Http\Requests\Concerns\TidiesInput;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 
 class EventRequest extends FormRequest
 {
@@ -50,6 +52,13 @@ class EventRequest extends FormRequest
             'image' => ['nullable', 'image', 'max:5120'],
             'removeImage' => ['boolean'],
 
+            // Галерея приходит целиком и в нужном порядке. Снимок, который
+            // уже лежит на сервере, обозначается одним id: перезаливать его
+            // ради перестановки было бы расточительно.
+            'gallery' => ['array', 'max:60'],
+            'gallery.*.id' => ['nullable', 'integer'],
+            'gallery.*.file' => ['nullable', 'image', 'max:8192'],
+
             // Программа — возможность, а не обязанность: у часовой встречи
             // её нет, у выездной программы это главное содержание страницы.
             'sessions' => ['array', 'max:200'],
@@ -58,6 +67,48 @@ class EventRequest extends FormRequest
             'sessions.*.endsAt' => ['nullable', 'date_format:H:i', 'after:sessions.*.startsAt'],
             'sessions.*.title' => ['required', 'string', 'max:255'],
             'sessions.*.note' => ['nullable', 'string', 'max:255'],
+        ];
+    }
+
+    /**
+     * Галерея парами «что оставить» и «что загрузить», в том порядке,
+     * в каком снимки лягут на страницу.
+     *
+     * Список берётся из `all()`, а не из `input()`: файлы лежат в своём
+     * наборе, и у только что выбранного снимка других полей нет — по одному
+     * `input()` он был бы невидим, а галерея молча приезжала бы пустой.
+     *
+     * @return array<int, array{id: int|null, file: UploadedFile|null}>
+     */
+    public function gallery(): array
+    {
+        return collect($this->all()['gallery'] ?? [])
+            ->values()
+            ->map(fn (mixed $item, int $position): array => [
+                'id' => filled($item['id'] ?? null) ? (int) $item['id'] : null,
+                'file' => $this->file("gallery.{$position}.file"),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array<int, callable>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                foreach ($this->gallery() as $position => $item) {
+                    // Ни id, ни файла: снимок потерялся по дороге. Промолчать
+                    // здесь значит тихо выбросить его из галереи.
+                    if ($item['id'] === null && $item['file'] === null) {
+                        $validator->errors()->add(
+                            "gallery.{$position}.file",
+                            'Не удалось прочитать снимок — выберите его заново.',
+                        );
+                    }
+                }
+            },
         ];
     }
 

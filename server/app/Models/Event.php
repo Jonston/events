@@ -91,19 +91,30 @@ class Event extends Model implements HasMedia
         return $query->where('starts_at', '>=', now())->orderBy('starts_at');
     }
 
-    /** У мероприятия одна обложка: галерея приедет отдельной коллекцией. */
     public function registerMediaCollections(): void
     {
+        // Обложка одна: её место на карточке и в шапке задано вёрсткой.
         $this->addMediaCollection('image')->singleFile();
+
+        // Галерея — сколько угодно снимков, и порядок в ней хранится:
+        // это тот же порядок, в котором они лягут на страницу.
+        $this->addMediaCollection('gallery');
     }
 
     /** Почему сразу, а не очередью — см. Master::registerMediaConversions(). */
     public function registerMediaConversions(?Media $media = null): void
     {
-        // Одна копия на карточку и на шапку страницы: обе показывают снимок
-        // целиком, разница только в ширине контейнера.
+        // Одна копия на карточку, шапку страницы и просмотр во весь экран:
+        // все трое показывают снимок целиком, разница в ширине контейнера.
         $this->addMediaConversion('card')
             ->fit(Fit::Max, 1600, 1600)
+            ->nonQueued();
+
+        // Плитка галереи квадратная: в сетке из десятка кадров разнобой
+        // пропорций читается как сбой вёрстки, а не как замысел.
+        $this->addMediaConversion('thumb')
+            ->performOnCollections('gallery')
+            ->fit(Fit::Crop, 400, 400)
             ->nonQueued();
     }
 

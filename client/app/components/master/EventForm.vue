@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { EventSessionForm, MasterEvent, ValidationErrors } from '~/types'
+import type { EventSessionForm, GalleryItem, MasterEvent, ValidationErrors } from '~/types'
 
 const props = defineProps<{ event?: MasterEvent | null }>()
 
@@ -28,6 +28,18 @@ const sessions = ref<EventSessionForm[]>(
   props.event?.sessions.map(session => ({ ...session })) ?? []
 )
 
+// Уже загруженные снимки приходят с адресами и без файла: перезаливать их
+// ради перестановки незачем, серверу хватит id.
+const gallery = ref<GalleryItem[]>(
+  props.event?.gallery.map(photo => ({
+    key: `saved-${photo.id}`,
+    id: photo.id,
+    file: null,
+    thumb: photo.thumb,
+    full: photo.full
+  })) ?? []
+)
+
 const image = ref<File | null>(null)
 const removeImage = ref(false)
 const imagePreview = computed(() => image.value ? URL.createObjectURL(image.value) : null)
@@ -46,7 +58,7 @@ const TABS = [
   { value: 'main', label: 'Основное', icon: 'i-lucide-text', fields: ['title', 'summary', 'description', 'price', 'depositRate', 'capacity'] },
   { value: 'schedule', label: 'Программа', icon: 'i-lucide-calendar-days', fields: ['startsAt', 'endsAt', 'sessions'] },
   { value: 'location', label: 'Локация', icon: 'i-lucide-map-pin', fields: ['location', 'latitude', 'longitude'] },
-  { value: 'media', label: 'Медиа', icon: 'i-lucide-image', fields: ['image'] }
+  { value: 'media', label: 'Медиа', icon: 'i-lucide-image', fields: ['image', 'gallery'] }
 ]
 
 const tab = ref('main')
@@ -108,6 +120,9 @@ async function submit() {
     capacity: form.capacity,
     isPublished: form.isPublished,
     sessions: sessions.value,
+    // Галерея уходит целиком и по порядку: уже загруженный снимок —
+    // одним id, только что выбранный — файлом.
+    gallery: gallery.value.map(item => item.file ? { file: item.file } : { id: item.id }),
     ...(image.value ? { image: image.value } : {}),
     ...(removeImage.value ? { removeImage: true } : {})
   }
@@ -362,10 +377,18 @@ async function submit() {
         </div>
       </UFormField>
 
-      <p class="text-sm text-dimmed">
-        Галерея и видео появятся вместе с медиатекой — пока у мероприятия
-        одна обложка.
-      </p>
+      <USeparator />
+
+      <UFormField
+        label="Галерея"
+        name="gallery"
+        description="Снимки с прошлых встреч. Первый идёт крупным кадром на странице мероприятия."
+      >
+        <MasterEventGallery
+          v-model="gallery"
+          :errors="errors"
+        />
+      </UFormField>
     </section>
 
     <!-- ── Общий подвал: он один на все вкладки ──

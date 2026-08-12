@@ -104,11 +104,26 @@ export interface ScheduleDay {
   items: ScheduleItem[]
 }
 
+/**
+ * Снимок галереи: квадрат для сетки и кадр целиком для просмотра
+ * во весь экран. Больше лайтбоксу ничего не нужно — ни того, что снимок
+ * уже на сервере, ни того, что его только что выбрали в форме.
+ */
+export interface Photo {
+  thumb: string
+  full: string
+}
+
+export interface EventPhoto extends Photo {
+  id: number
+}
+
 export interface EventDetail {
   card: EventCard
   description: string | null
   capacity: number | null
   schedule: ScheduleDay[]
+  gallery: EventPhoto[]
   depositFormatted: string
   remainingFormatted: string
   refundDeadline: string
@@ -164,6 +179,20 @@ export interface MasterEvent {
   isPublished: boolean
   leadsCount: number
   sessions: EventSessionForm[]
+  gallery: EventPhoto[]
+}
+
+/**
+ * Снимок в форме галереи.
+ *
+ * `id` — то, что уже лежит на сервере, `file` — то, что человек только что
+ * выбрал. Ключ свой: у нового снимка id ещё нет, а списку нужен устойчивый
+ * идентификатор, иначе при перетаскивании плитки теряют своё место.
+ */
+export interface GalleryItem extends Photo {
+  key: string
+  id: number | null
+  file: File | null
 }
 
 export interface MasterProfile {

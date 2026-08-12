@@ -17,7 +17,7 @@ class EventController extends Controller
         $events = Event::query()
             ->published()
             ->upcoming()
-            ->with('master')
+            ->with(['master', 'media'])
             ->get();
 
         return response()->json([
@@ -29,7 +29,7 @@ class EventController extends Controller
     {
         abort_unless($event->is_published, 404);
 
-        $event->load(['master', 'sessions']);
+        $event->load(['master', 'sessions', 'media']);
 
         return EventDetailData::fromModel($event);
     }

@@ -9,6 +9,7 @@ use App\Models\Master;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Сохранение мероприятия вместе с программой.
@@ -22,10 +23,11 @@ class EventWriter
 {
     /**
      * @param  array<string, mixed>  $data
+     * @param  array<int, array{id: int|null, file: UploadedFile|null}>  $gallery
      */
-    public function save(Event $event, Master $master, array $data, ?UploadedFile $image = null): Event
+    public function save(Event $event, Master $master, array $data, ?UploadedFile $image = null, array $gallery = []): Event
     {
-        return DB::transaction(function () use ($event, $master, $data, $image): Event {
+        return DB::transaction(function () use ($event, $master, $data, $image, $gallery): Event {
             $event->fill([
                 'master_id' => $master->id,
                 'title' => $data['title'],
@@ -53,6 +55,7 @@ class EventWriter
             // к записи по id, а у новой записи его до этого нет.
             $event->syncImage('image', $image, ($data['removeImage'] ?? false) === true);
 
+            $this->syncGallery($event, $gallery);
             $this->syncSessions($event, $data['sessions'] ?? []);
 
             return $event;
@@ -65,6 +68,34 @@ class EventWriter
         DB::transaction(function () use ($event): void {
             $event->delete();
         });
+    }
+
+    /**
+     * Галерея приходит целиком: что осталось, что добавилось и в каком порядке.
+     *
+     * Снимка нет в списке — значит его убрали. Порядок сохраняем, а не выводим
+     * из времени загрузки: это порядок кадров на странице, и добавленный
+     * позже снимок вполне может быть первым.
+     *
+     * @param  array<int, array{id: int|null, file: UploadedFile|null}>  $items
+     */
+    private function syncGallery(Event $event, array $items): void
+    {
+        $kept = array_filter(array_column($items, 'id'));
+
+        $event->getMedia('gallery')
+            ->reject(fn (Media $media): bool => in_array($media->id, $kept, true))
+            ->each(fn (Media $media) => $media->delete());
+
+        $order = [];
+
+        foreach ($items as $item) {
+            $order[] = $item['file'] === null
+                ? $item['id']
+                : $event->addMedia($item['file'])->toMediaCollection('gallery')->id;
+        }
+
+        Media::setNewOrder(array_filter($order));
     }
 
     /**
