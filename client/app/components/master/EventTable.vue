@@ -57,6 +57,7 @@ const columns: TableColumn<MasterEvent>[] = [
   { accessorKey: 'location', header: 'Место' },
   { accessorKey: 'price', header: 'Стоимость' },
   { accessorKey: 'leadsCount', header: 'Заявки' },
+  { accessorKey: 'seatsLeft', header: 'Места' },
   // Заголовок непустой намеренно. Пустая строка не даёт серверу ни одного
   // узла, а на клиенте Vue создаёт под неё якоря фрагмента — разметка
   // расходится, и таблица перерисовывается заново после гидрации.
@@ -178,6 +179,20 @@ const columns: TableColumn<MasterEvent>[] = [
       <template #leadsCount-cell="{ row }">
         <span :class="row.original.leadsCount ? '' : 'text-dimmed'">
           {{ row.original.leadsCount || '—' }}
+        </span>
+      </template>
+
+      <!-- Занято/всего, а не «осталось»: мастеру важнее набор, чем остаток. -->
+      <template #seatsLeft-cell="{ row }">
+        <span
+          v-if="row.original.capacity === null"
+          class="text-dimmed"
+        >без лимита</span>
+        <span
+          v-else
+          :class="row.original.seatsLeft === 0 ? 'text-warning' : ''"
+        >
+          {{ row.original.seatsTaken }} / {{ row.original.capacity }}
         </span>
       </template>
 

@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $user->createToken($request->deviceName())->plainTextToken,
-            'user' => UserData::fromModel($user->load('roles')),
+            'user' => UserData::fromModel($user->load(['roles', 'phones'])),
         ]);
     }
 
@@ -49,6 +49,6 @@ class AuthController extends Controller
 
     public function me(Request $request): UserData
     {
-        return UserData::fromModel($request->user()->load('roles'));
+        return UserData::fromModel($request->user()->load(['roles', 'phones']));
     }
 }

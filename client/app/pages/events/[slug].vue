@@ -149,6 +149,13 @@ useHead({ title: () => event.value.title })
                 </dt>
                 <dd class="mt-0.5 text-forest-900">
                   {{ detail.capacity }}
+                  <!-- Свободные места — довод записаться сегодня, поэтому
+                       они стоят рядом с размером группы, а не вместо него:
+                       «осталось 2» без «из 8» звучит как распродажа. -->
+                  <span
+                    v-if="detail.seatsLeft !== null"
+                    class="text-stone-500"
+                  >· {{ detail.seatsLeft ? `свободно ${detail.seatsLeft}` : 'мест нет' }}</span>
                 </dd>
               </div>
             </div>

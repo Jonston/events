@@ -25,6 +25,7 @@ const props = withDefaults(defineProps<{
 })
 
 const { sendLead } = useShowcaseApi()
+const { currentUser } = useAuth()
 
 const form = reactive({
   name: '',
@@ -34,6 +35,25 @@ const form = reactive({
   // Ловушка для ботов: человек этого поля не видит и не заполняет.
   company: ''
 })
+
+/**
+ * Вошедшему подставляем то, что о нём уже известно: имя, почту и основной
+ * телефон. Переписывать свои же контакты в каждой заявке — работа,
+ * которую площадка может сделать за человека; остаётся только сообщение.
+ *
+ * Заполненное руками не трогаем: подстановка приходит после гидрации,
+ * и затирать ею начатый текст нельзя.
+ */
+watch(currentUser, (user) => {
+  if (!user) return
+
+  if (!form.name) form.name = user.name
+  if (!form.email) form.email = user.email
+  if (!form.phone && user.phone) form.phone = user.phone
+}, { immediate: true })
+
+/** Свои номера — списком: записаться можно и не на свой телефон. */
+const phoneOptions = computed(() => currentUser.value?.phones ?? [])
 
 const sending = ref(false)
 const success = ref<string | null>(null)
@@ -59,7 +79,15 @@ async function submit() {
     })
 
     success.value = result.message
-    Object.assign(form, { name: '', phone: '', email: '', message: '' })
+
+    // Вошедшему возвращаем его же контакты: он мог захотеть записать
+    // ещё кого-то, и стирать имя с телефоном ради этого незачем.
+    Object.assign(form, {
+      name: currentUser.value?.name ?? '',
+      phone: currentUser.value?.phone ?? '',
+      email: currentUser.value?.email ?? '',
+      message: ''
+    })
   } catch (error: unknown) {
     const failure = error as { data?: { errors?: ValidationErrors, message?: string } }
     errors.value = failure?.data?.errors ?? {}
@@ -91,7 +119,7 @@ async function submit() {
           color="neutral"
           variant="ghost"
           size="xs"
-          icon="i-lucide-circle-help"
+          icon="i-lucide-help-circle"
           aria-label="Об условиях заявки"
         />
         <template #content>
@@ -101,6 +129,23 @@ async function submit() {
         </template>
       </UPopover>
     </div>
+
+    <p
+      v-if="currentUser"
+      class="mb-4 flex flex-wrap items-center gap-x-2 text-sm text-stone-500"
+    >
+      <UIcon
+        name="i-lucide-user-check"
+        class="size-4 text-forest-600"
+      />
+      Ваши данные подставлены.
+      <NuxtLink
+        to="/cabinet/profile"
+        class="underline decoration-stone-300 underline-offset-2 hover:text-forest-800"
+      >
+        Изменить
+      </NuxtLink>
+    </p>
 
     <UAlert
       v-if="success"
@@ -148,7 +193,19 @@ async function submit() {
         name="phone"
         :error="fieldError('phone')"
       >
+        <!-- У вошедшего с несколькими номерами — поле со списком своих:
+             набрать другой всё равно можно, но обычно нужен один из них. -->
+        <UInputMenu
+          v-if="phoneOptions.length > 1"
+          v-model="form.phone"
+          :items="phoneOptions"
+          size="lg"
+          class="w-full"
+          placeholder="+380"
+          autocomplete="tel"
+        />
         <UInput
+          v-else
           v-model="form.phone"
           type="tel"
           size="lg"

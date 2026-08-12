@@ -17,12 +17,14 @@ class UserData extends Data
 {
     /**
      * @param  array<int, string>  $roles
+     * @param  array<int, string>  $phones  Все номера, основной первым.
      */
     public function __construct(
         public int $id,
         public string $name,
         public string $email,
         public ?string $phone,
+        public array $phones,
         public ?string $avatarUrl,
         public array $roles,
         public bool $emailVerified,
@@ -35,7 +37,10 @@ class UserData extends Data
             id: $user->id,
             name: $user->name,
             email: $user->email,
-            phone: $user->phone,
+            // Основной номер отдельным полем: форма заявки подставляет
+            // именно его, а весь список нужен ей только для выбора.
+            phone: $user->primaryPhone(),
+            phones: $user->phones->pluck('phone')->all(),
             avatarUrl: $user->avatar_url,
             roles: $user->roles->pluck('name')->all(),
             emailVerified: $user->email_verified_at !== null,

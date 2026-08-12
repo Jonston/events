@@ -38,6 +38,9 @@ class MasterEventData extends Data
         public ?int $capacity,
         public bool $isPublished,
         public int $leadsCount,
+        /** Занято по броням; null у групп без ограничения. */
+        public ?int $seatsTaken,
+        public ?int $seatsLeft,
         public array $sessions,
         public array $gallery,
     ) {}
@@ -65,6 +68,8 @@ class MasterEventData extends Data
             capacity: $event->capacity,
             isPublished: $event->is_published,
             leadsCount: (int) ($event->leads_count ?? 0),
+            seatsTaken: $event->capacity === null ? null : $event->seatsTaken(),
+            seatsLeft: $event->seatsLeft(),
             sessions: $event->sessions->map(fn (EventSession $session): array => [
                 'day' => $session->day->toDateString(),
                 'startsAt' => substr((string) $session->starts_at, 0, 5),

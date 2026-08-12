@@ -63,6 +63,30 @@ class MasterCabinetTest extends TestCase
         $this->assertStringStartsWith('http', $url);
     }
 
+    /** Мероприятие этого мастера с заданным размером группы. */
+    private function eventOf(User $master, ?int $capacity = null): Event
+    {
+        return Event::create([
+            'master_id' => $master->master->id,
+            'slug' => 'praktika-'.uniqid(),
+            'title' => 'Практика',
+            'starts_at' => now()->addMonth(),
+            'price' => 1000,
+            'capacity' => $capacity,
+            'is_published' => true,
+        ]);
+    }
+
+    private function leadFor(Event $event, string $name = 'Пётр'): Lead
+    {
+        return Lead::create([
+            'master_id' => $event->master_id,
+            'event_id' => $event->id,
+            'name' => $name,
+            'phone' => '+380671112233',
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -402,6 +426,91 @@ class MasterCabinetTest extends TestCase
             ->patchJson("/api/master/leads/{$lead->id}/status", ['status' => LeadStatus::Booked->value])
             ->assertOk()
             ->assertJsonPath('status', 'booked');
+    }
+
+    public function test_status_change_is_written_to_history_with_a_comment(): void
+    {
+        $master = $this->master();
+        $lead = Lead::create(['master_id' => $master->master->id, 'name' => 'Пётр', 'phone' => '+380671112233']);
+
+        $this->actingAs($master, 'sanctum')
+            ->patchJson("/api/master/leads/{$lead->id}/status", [
+                'status' => LeadStatus::Spam->value,
+                'comment' => 'Реклама услуг, не участник.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('status', 'spam')
+            ->assertJsonPath('history.0.fromStatus', 'new')
+            ->assertJsonPath('history.0.toStatus', 'spam')
+            ->assertJsonPath('history.0.comment', 'Реклама услуг, не участник.')
+            ->assertJsonPath('history.0.author', $master->name);
+    }
+
+    public function test_booking_takes_a_seat_and_refund_returns_it(): void
+    {
+        $master = $this->master();
+        $event = $this->eventOf($master, capacity: 2);
+        $lead = $this->leadFor($event);
+
+        $this->assertSame(2, $event->seatsLeft());
+
+        $this->actingAs($master, 'sanctum')
+            ->patchJson("/api/master/leads/{$lead->id}/status", ['status' => LeadStatus::Booked->value])
+            ->assertOk();
+
+        $this->assertSame(1, $event->refresh()->seatsLeft());
+
+        // Возврат освобождает место: тем же счётом, без отдельного счётчика.
+        $this->actingAs($master, 'sanctum')
+            ->patchJson("/api/master/leads/{$lead->id}/status", ['status' => LeadStatus::Refunded->value])
+            ->assertOk();
+
+        $this->assertSame(2, $event->refresh()->seatsLeft());
+    }
+
+    public function test_booking_is_refused_when_no_seats_left(): void
+    {
+        $master = $this->master();
+        $event = $this->eventOf($master, capacity: 1);
+        $first = $this->leadFor($event);
+        $second = $this->leadFor($event, 'Второй');
+
+        $this->actingAs($master, 'sanctum')
+            ->patchJson("/api/master/leads/{$first->id}/status", ['status' => LeadStatus::Booked->value])
+            ->assertOk();
+
+        $this->actingAs($master, 'sanctum')
+            ->patchJson("/api/master/leads/{$second->id}/status", ['status' => LeadStatus::Booked->value])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('status');
+
+        $this->assertSame(LeadStatus::New, $second->refresh()->status);
+    }
+
+    public function test_leads_are_filtered_by_status_and_event(): void
+    {
+        $master = $this->master();
+        $event = $this->eventOf($master, capacity: 5);
+
+        $this->leadFor($event, 'С мероприятия');
+        Lead::create(['master_id' => $master->master->id, 'name' => 'Со страницы', 'status' => LeadStatus::Spam->value]);
+
+        $this->actingAs($master, 'sanctum')
+            ->getJson('/api/master/leads?status=spam')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Со страницы');
+
+        $this->actingAs($master, 'sanctum')
+            ->getJson("/api/master/leads?eventId={$event->id}")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'С мероприятия');
+
+        $this->actingAs($master, 'sanctum')
+            ->getJson('/api/master/leads?search=страницы')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
     }
 
     public function test_master_cannot_touch_another_masters_lead(): void

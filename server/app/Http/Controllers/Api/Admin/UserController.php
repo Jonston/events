@@ -38,7 +38,7 @@ class UserController extends Controller
         $direction = $request->string('direction')->value() === 'asc' ? 'asc' : 'desc';
 
         $users = User::query()
-            ->with('roles')
+            ->with(['roles', 'phones'])
             ->search($request->string('search')->value())
             ->when(
                 $request->filled('role'),
@@ -66,6 +66,6 @@ class UserController extends Controller
 
     public function show(User $user): UserData
     {
-        return UserData::fromModel($user->load('roles'));
+        return UserData::fromModel($user->load(['roles', 'phones']));
     }
 }

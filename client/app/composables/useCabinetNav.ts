@@ -36,7 +36,7 @@ const SECTIONS: Record<UserRole, CabinetSection> = {
       { label: 'Обзор', icon: 'i-lucide-layout-dashboard', to: '/master' },
       { label: 'Моя страница', icon: 'i-lucide-id-card', to: '/master/profile' },
       { label: 'Мои мероприятия', icon: 'i-lucide-calendar-days', to: '/master/events' },
-      { label: 'Заявки ко мне', icon: 'i-lucide-inbox', to: '/master/leads' },
+      { label: 'Заявки', icon: 'i-lucide-inbox', to: '/master/leads' },
       { label: 'Отзывы', icon: 'i-lucide-message-square-quote', to: '/master/reviews' }
     ]
   },
@@ -45,6 +45,7 @@ const SECTIONS: Record<UserRole, CabinetSection> = {
     brand: { label: 'Мой кабинет', icon: 'i-lucide-user' },
     navItems: [
       { label: 'Обзор', icon: 'i-lucide-layout-dashboard', to: '/cabinet' },
+      { label: 'Мои данные', icon: 'i-lucide-id-card', to: '/cabinet/profile' },
       { label: 'Мои записи', icon: 'i-lucide-ticket', disabled: true },
       { label: 'Мои отзывы', icon: 'i-lucide-message-square-quote', disabled: true },
       { label: 'Стать мастером', icon: 'i-lucide-sparkles', disabled: true }

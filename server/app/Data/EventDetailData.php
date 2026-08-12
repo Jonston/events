@@ -22,6 +22,8 @@ class EventDetailData extends Data
         public EventCardData $card,
         public ?string $description,
         public ?int $capacity,
+        /** Свободные места; null — группу не ограничивали. */
+        public ?int $seatsLeft,
         public array $schedule,
         public array $gallery,
         public string $depositFormatted,
@@ -35,6 +37,7 @@ class EventDetailData extends Data
             card: EventCardData::fromModel($event),
             description: $event->description,
             capacity: $event->capacity,
+            seatsLeft: $event->seatsLeft(),
             schedule: self::schedule($event),
             gallery: EventPhotoData::galleryOf($event),
             depositFormatted: EventCardData::money($event->depositAmount()),

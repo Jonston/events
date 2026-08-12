@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\UserRole;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Cabinet\ProfileController as CabinetProfileController;
 use App\Http\Controllers\Api\Master\EventController as MasterEventController;
 use App\Http\Controllers\Api\Master\LeadController as MasterLeadController;
 use App\Http\Controllers\Api\Master\OverviewController as MasterOverviewController;
@@ -58,6 +59,17 @@ Route::middleware('auth:sanctum')->group(function (): void {
     // nuxt-auth-sanctum на клиенте; `/me` оставлен как явный синоним.
     Route::get('/user', [AuthController::class, 'me'])->name('api.user');
     Route::get('/me', [AuthController::class, 'me'])->name('api.me');
+
+    /*
+     * Кабинет участника открыт любому вошедшему: мастер и администратор —
+     * тоже участники площадки, и запирать от них собственные данные не за что.
+     */
+    Route::prefix('cabinet')
+        ->name('api.cabinet.')
+        ->group(function (): void {
+            Route::get('/profile', [CabinetProfileController::class, 'show'])->name('profile.show');
+            Route::put('/profile', [CabinetProfileController::class, 'update'])->name('profile.update');
+        });
 
     /*
      * Кабинет мастера. Роль — вход в раздел, а право на конкретное

@@ -1,4 +1,4 @@
-import type { LeadStatus, MasterEvent, MasterLead, MasterOverview, MasterProfile, MasterReview } from '~/types'
+import type { LeadQuery, LeadsPage, MasterEvent, MasterLead, MasterOverview, MasterProfile, MasterReview } from '~/types'
 
 /**
  * Кабинет мастера.
@@ -34,13 +34,13 @@ export function useMasterApi() {
   const deleteEvent = (id: number): Promise<{ message: string }> =>
     api<{ message: string }>(`/api/master/events/${id}`, { method: 'DELETE' })
 
-  const fetchLeads = (): Promise<{ data: MasterLead[], statuses: LeadStatus[] }> =>
-    api<{ data: MasterLead[], statuses: LeadStatus[] }>('/api/master/leads')
+  const fetchLeads = (query: LeadQuery = {}): Promise<LeadsPage> =>
+    api<LeadsPage>('/api/master/leads', { query: toListQuery(query) })
 
-  const setLeadStatus = (id: number, status: string): Promise<{ status: string, statusLabel: string }> =>
-    api<{ status: string, statusLabel: string }>(`/api/master/leads/${id}/status`, {
+  const setLeadStatus = (id: number, status: string, comment?: string): Promise<MasterLead> =>
+    api<MasterLead>(`/api/master/leads/${id}/status`, {
       method: 'PATCH',
-      body: { status }
+      body: { status, comment }
     })
 
   const fetchReviews = (): Promise<{ data: MasterReview[] }> =>

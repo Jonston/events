@@ -3,12 +3,14 @@ import type { EventCard, EventDetail, HomeContent, LeadPayload, MasterCard, Mast
 /**
  * Витрина: каталог мастеров, мероприятия и отправка заявки.
  *
- * Все эти адреса открыты гостю, поэтому здесь обычный `$fetch`, а не клиент
- * с токеном: каталог не должен переставать работать оттого, что человек
- * не вошёл.
+ * Каталог читается обычным `$fetch`: он открыт гостю и не должен переставать
+ * работать оттого, что человек не вошёл. А вот заявка уходит клиентом
+ * с токеном — если человек вошёл, она должна остаться привязанной
+ * к его аккаунту, иначе своих записей он потом не найдёт.
  */
 export function useShowcaseApi() {
   const baseUrl = useRuntimeConfig().public.apiUrl as string
+  const client = useSanctumClient()
 
   const fetchHome = (): Promise<HomeContent> =>
     $fetch<HomeContent>(`${baseUrl}/api/home`)
@@ -26,7 +28,7 @@ export function useShowcaseApi() {
     $fetch<EventDetail>(`${baseUrl}/api/events/${slug}`)
 
   const sendLead = (payload: LeadPayload): Promise<{ id: number, message: string }> =>
-    $fetch<{ id: number, message: string }>(`${baseUrl}/api/leads`, {
+    client<{ id: number, message: string }>(`${baseUrl}/api/leads`, {
       method: 'POST',
       body: payload
     })

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\LeadStatus;
 use App\Models\Concerns\HasImages;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -121,6 +122,25 @@ class Event extends Model implements HasMedia
     public function imageUrl(): ?string
     {
         return $this->mediaUrl('image', 'card');
+    }
+
+    /**
+     * Сколько мест занято.
+     *
+     * Считается по броням, а не хранится счётчиком: счётчик расходится
+     * с заявками при первом же двойном переводе статуса, а восстановить
+     * его потом неоткуда.
+     */
+    public function seatsTaken(): int
+    {
+        return (int) ($this->leads_booked_count
+            ?? $this->leads()->whereIn('status', LeadStatus::seatHolding())->count());
+    }
+
+    /** Сколько осталось. Null — мест не ограничивали. */
+    public function seatsLeft(): ?int
+    {
+        return $this->capacity === null ? null : max(0, $this->capacity - $this->seatsTaken());
     }
 
     public function depositAmount(): float

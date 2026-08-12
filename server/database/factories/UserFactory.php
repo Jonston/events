@@ -29,9 +29,22 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            'phone' => fake()->numerify('+7 (9##) ###-##-##'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * Основной телефон заводится вместе с человеком: без номера заявка
+     * от него бесполезна — по ней некуда перезвонить.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->phones()->create([
+                'phone' => fake()->numerify('+380 (6#) ###-##-##'),
+                'is_primary' => true,
+            ]);
+        });
     }
 
     /**

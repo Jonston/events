@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\Master;
 
 use App\Data\MasterEventData;
+use App\Enums\LeadStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\EventRequest;
 use App\Models\Event;
 use App\Models\Master;
 use App\Services\EventWriter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,6 +32,9 @@ class EventController extends Controller
 
         $events = $master->events()
             ->withCount('leads')
+            // Брони считаем тем же запросом: иначе каждая строка списка
+            // лезла бы в базу за своими занятыми местами.
+            ->withCount(['leads as leads_booked_count' => fn (Builder $query) => $query->whereIn('status', LeadStatus::seatHolding())])
             ->with(['sessions', 'media'])
             // Черновики и прошедшее тоже здесь: кабинет — рабочий стол,
             // а не витрина, и спрятать от мастера то, что он ещё не издал,

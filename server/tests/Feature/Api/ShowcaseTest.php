@@ -7,6 +7,7 @@ namespace Tests\Feature\Api;
 use App\Models\Event;
 use App\Models\Lead;
 use App\Models\Master;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -104,6 +105,24 @@ class ShowcaseTest extends TestCase
         $this->assertSame($event->id, $lead->event_id);
         // Мастера клиент не присылал — связь восстановлена по мероприятию.
         $this->assertSame($master->id, $lead->master_id);
+    }
+
+    public function test_lead_from_a_signed_in_member_keeps_the_account(): void
+    {
+        $member = User::factory()->create();
+
+        // Токен настоящий, а не подменённый охранник: маршрут открыт гостю,
+        // на нём нет middleware, и разбирать заголовок контроллер должен сам.
+        // Через `actingAs` эта разница не видна — там подменяется и охранник
+        // по умолчанию, при котором ошибка не воспроизводится.
+        $token = $member->createToken('test')->plainTextToken;
+
+        $this->withHeader('Authorization', 'Bearer '.$token)->postJson('/api/leads', [
+            'name' => $member->name,
+            'phone' => '+380671112233',
+        ])->assertCreated();
+
+        $this->assertSame($member->id, Lead::sole()->user_id);
     }
 
     public function test_lead_requires_a_phone(): void

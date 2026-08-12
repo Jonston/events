@@ -5,7 +5,9 @@ export interface User {
   id: number
   name: string
   email: string
+  /** Основной номер — тот, что подставляется в форму заявки. */
   phone: string | null
+  phones: string[]
   avatarUrl: string | null
   roles: UserRole[]
   emailVerified: boolean
@@ -122,6 +124,7 @@ export interface EventDetail {
   card: EventCard
   description: string | null
   capacity: number | null
+  seatsLeft: number | null
   schedule: ScheduleDay[]
   gallery: EventPhoto[]
   depositFormatted: string
@@ -178,6 +181,8 @@ export interface MasterEvent {
   capacity: number | null
   isPublished: boolean
   leadsCount: number
+  seatsTaken: number | null
+  seatsLeft: number | null
   sessions: EventSessionForm[]
   gallery: EventPhoto[]
 }
@@ -231,6 +236,18 @@ export interface LeadStatus {
   label: string
 }
 
+/** Одна запись в истории заявки: откуда, куда, кто и что сказал. */
+export interface LeadStatusChange {
+  id: number
+  fromStatus: string | null
+  fromLabel: string | null
+  toStatus: string
+  toLabel: string
+  comment: string | null
+  author: string | null
+  createdAt: string
+}
+
 export interface MasterLead {
   id: number
   name: string
@@ -239,9 +256,25 @@ export interface MasterLead {
   message: string | null
   status: string
   statusLabel: string
+  eventId: number | null
   eventTitle: string | null
   eventSlug: string | null
+  fromMember: boolean
   createdAt: string
+  history: LeadStatusChange[]
+}
+
+/** Фильтры списка заявок поверх общих параметров списка. */
+export interface LeadQuery extends ListQuery {
+  status?: string
+  eventId?: number | string
+}
+
+export interface LeadsPage {
+  data: MasterLead[]
+  meta: { page: number, perPage: number, total: number, lastPage: number }
+  statuses: LeadStatus[]
+  events: Array<{ value: number, label: string }>
 }
 
 export interface MasterReview {

@@ -26,9 +26,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RoleSeeder::class);
 
-        $this->account('admin@example.com', 'Администратор площадки', UserRole::Admin);
-        $this->account('master@example.com', 'Мастер Иванов', UserRole::Master);
-        $this->account('user@example.com', 'Участник Петров', UserRole::Member);
+        $this->account('admin@example.com', 'Администратор площадки', UserRole::Admin, '+380 (67) 100-10-01');
+        $this->account('master@example.com', 'Мастер Иванов', UserRole::Master, '+380 (67) 200-20-02');
+        // Два номера намеренно: на этом аккаунте видно, как форма заявки
+        // предлагает выбрать, по какому звонить.
+        $this->account('user@example.com', 'Участник Петров', UserRole::Member, '+380 (67) 300-30-03', '+380 (50) 444-44-44');
 
         User::factory()
             ->count(4)
@@ -46,7 +48,7 @@ class DatabaseSeeder extends Seeder
     }
 
     /** Именной аккаунт с известным паролем — для входа руками. */
-    private function account(string $email, string $name, UserRole $role): User
+    private function account(string $email, string $name, UserRole $role, string ...$phones): User
     {
         $user = User::updateOrCreate(
             ['email' => $email],
@@ -58,6 +60,14 @@ class DatabaseSeeder extends Seeder
         );
 
         $user->syncRoles([$role->value]);
+
+        // Телефоны переписываются целиком: сеятель приводит аккаунт
+        // к известному состоянию, а не дописывает к прошлому запуску.
+        $user->phones()->delete();
+
+        foreach (array_values($phones) as $position => $phone) {
+            $user->phones()->create(['phone' => $phone, 'is_primary' => $position === 0]);
+        }
 
         return $user;
     }

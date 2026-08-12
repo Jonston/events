@@ -30,7 +30,10 @@ class LeadController extends Controller
             'message' => $request->string('message')->value() ?: null,
             'event_id' => $eventId,
             'master_id' => $masterId,
-            'user_id' => $request->user()?->id,
+            // Гость и вошедший приходят одним адресом, поэтому охраны
+            // на маршруте нет — токен разбираем сами: заявка от вошедшего
+            // должна остаться связанной с его аккаунтом.
+            'user_id' => $request->user('sanctum')?->id,
             'source' => $eventId !== null ? 'event' : 'master',
             'client_ip' => $request->ip(),
             'client_user_agent' => $request->userAgent(),

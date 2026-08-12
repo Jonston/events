@@ -11,13 +11,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'avatar_url'])]
+#[Fillable(['name', 'email', 'password', 'avatar_url'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -53,8 +54,25 @@ class User extends Authenticatable implements MustVerifyEmail
         return $query->where(function (Builder $query) use ($like): void {
             $query->where('name', 'like', $like)
                 ->orWhere('email', 'like', $like)
-                ->orWhere('phone', 'like', $like);
+                ->orWhereHas('phones', fn (Builder $phones) => $phones->where('phone', 'like', $like));
         });
+    }
+
+    /**
+     * Телефоны, основной первым: именно он подставляется в заявку,
+     * а остальные человек выбирает сам.
+     *
+     * @return HasMany<UserPhone, $this>
+     */
+    public function phones(): HasMany
+    {
+        return $this->hasMany(UserPhone::class)->orderByDesc('is_primary')->orderBy('id');
+    }
+
+    public function primaryPhone(): ?string
+    {
+        return $this->phones->firstWhere('is_primary', true)?->phone
+            ?? $this->phones->first()?->phone;
     }
 
     /**

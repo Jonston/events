@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'master_id', 'event_id', 'user_id', 'name', 'phone', 'email', 'message',
@@ -46,5 +47,16 @@ class Lead extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * История статусов, свежая сверху: в кабинете сначала смотрят,
+     * что было последним, а не с чего всё началось.
+     *
+     * @return HasMany<LeadStatusChange, $this>
+     */
+    public function statusChanges(): HasMany
+    {
+        return $this->hasMany(LeadStatusChange::class)->latest('id');
     }
 }
