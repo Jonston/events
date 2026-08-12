@@ -45,6 +45,8 @@ const suggestions = ref<Array<{ label: string, lat: number, lng: number }>>([])
 const searching = ref(false)
 const resolving = ref(false)
 const failed = ref<string | null>(null)
+/** Карта в движении — булавка приподнята над своей тенью. */
+const dragging = ref(false)
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null
 let draggedByHand = false
@@ -167,7 +169,15 @@ function createMap() {
     draggedByHand = true
   })
 
+  // Не только перетаскивание: булавка поднимается и на зуме, и на переезде
+  // к найденному адресу — карта движется, точка ещё не выбрана.
+  instance.on('movestart', () => {
+    dragging.value = true
+  })
+
   instance.on('moveend', () => {
+    dragging.value = false
+
     const center = instance.getCenter()
     latitude.value = Number(center.lat.toFixed(6))
     longitude.value = Number(center.lng.toFixed(6))
@@ -248,22 +258,37 @@ onBeforeUnmount(() => {
 
     <div
       v-else
-      class="relative h-80 overflow-hidden rounded-lg border border-default"
+      class="relative h-96 overflow-hidden rounded-lg border border-default sm:h-112"
     >
       <div
         ref="container"
         class="size-full"
       />
 
-      <!-- Метка приколота к центру: двигается карта, а не она. -->
+      <!-- Булавка приколота к центру: она никуда не двигается, двигается
+           карта. Тень лежит ровно в выбранной точке, булавка приподнята
+           над ней на высоту иглы — пока карту тащат, выше и с тенью
+           пошире, чтобы было видно, что точка ещё не поставлена. -->
       <div
-        class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full"
+        class="pointer-events-none absolute inset-0 flex items-center justify-center"
         aria-hidden="true"
       >
-        <UIcon
-          name="i-lucide-map-pin"
-          class="size-9 text-coral-700 drop-shadow-md"
+        <span
+          class="absolute h-1.5 rounded-full bg-forest-950/30 transition-all"
+          :class="dragging ? 'w-4 opacity-100' : 'w-3 opacity-70'"
         />
+        <svg
+          width="34"
+          height="34"
+          viewBox="0 0 24 24"
+          class="absolute text-coral-700 drop-shadow-md transition-transform duration-150"
+          :class="dragging ? '-translate-y-5' : '-translate-y-3.5'"
+        >
+          <path
+            fill="currentColor"
+            d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"
+          />
+        </svg>
       </div>
     </div>
 
