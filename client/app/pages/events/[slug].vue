@@ -248,7 +248,9 @@ useHead({ title: () => event.value.title })
           </section>
         </div>
 
-        <aside class="lg:sticky lg:top-24 lg:self-start">
+        <!-- Отступ ровно под шапкой (h-16 + h-9 верхней полосы уезжает
+             при прокрутке): заявка встаёт вровень с галереей слева. -->
+        <aside class="lg:sticky lg:top-20 lg:self-start">
           <ShowcaseLeadForm
             :event-id="event.id"
             :master-id="event.masterId"

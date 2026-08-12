@@ -137,7 +137,7 @@ async function submit() {
 </script>
 
 <template>
-  <section class="rounded-3xl bg-white p-6 shadow-[0_18px_40px_-28px] shadow-forest-900/40 ring-1 ring-forest-100 sm:p-7">
+  <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-forest-100 sm:p-7">
     <!-- ── Заявка отправлена или уже была ──
          Вместо формы — отметка: повторная заявка ничего не добавит,
          а пустая форма под сообщением об успехе выглядит как приглашение
