@@ -56,35 +56,10 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
 </script>
 
 <template>
-  <!-- ── Верхняя полоса ──
-       min-w-0 + truncate: без них длинная строка на узком экране
-       распирает полосу фиксированной высоты и текст вылезает. -->
-  <div class="on-dark bg-forest-900 text-forest-200">
-    <div class="mx-auto flex h-9 max-w-page items-center justify-between px-6 text-xs">
-      <p class="flex min-w-0 items-center gap-2">
-        <UIcon
-          name="i-lucide-leaf"
-          class="size-3.5 shrink-0 text-forest-400"
-        />
-        <span class="truncate">Отвечаем на заявку в течение суток</span>
-      </p>
-      <a
-        href="mailto:hello@example.com"
-        class="hidden items-center gap-2 transition-colors hover:text-white sm:inline-flex"
-      >
-        <UIcon
-          name="i-lucide-mail"
-          class="size-3.5"
-        />
-        hello@example.com
-      </a>
-    </div>
-  </div>
-
   <!-- ── Шапка ──
-       Остаётся на экране при прокрутке, и общей обёртки вокруг неё нет
-       намеренно: `sticky` двигается только в пределах своего родителя,
-       а внутри блока высотой в саму шапку она уезжала вместе с ним. -->
+       Остаётся на экране при прокрутке, и обёртки вокруг неё нет намеренно:
+       `sticky` двигается только в пределах своего родителя, а внутри блока
+       высотой в саму шапку она уезжала бы вместе с ним. -->
   <header class="sticky top-0 z-50 border-b border-forest-100 bg-paper/95 backdrop-blur-md">
     <div class="mx-auto flex h-16 max-w-page items-center justify-between px-6">
       <NuxtLink

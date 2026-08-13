@@ -293,7 +293,6 @@ async function submit() {
         <UFormField
           label="Окончание"
           name="endsAt"
-          description="Для однодневного можно не заполнять."
           :error="fieldError('endsAt')"
         >
           <DateTimeField
