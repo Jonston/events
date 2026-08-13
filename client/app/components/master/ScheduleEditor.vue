@@ -2,112 +2,104 @@
 import type { EventSessionForm } from '~/types'
 
 /**
- * Расписание мероприятия: дни, а внутри дней — пункты.
+ * Расписание мероприятия: дни берутся из дат проведения, а пункты человек
+ * пишет внутри дня.
  *
- * Наружу уходит плоский список — так его хранит сервер, — но правится
- * он днями: человек пишет «в субботу с десяти», а не «элемент номер семь».
- * День здесь существует сам по себе, даже пустой: иначе «добавить день»
- * вынужден сразу создавать пункт, и кнопка делает не то, что обещает.
+ * Дни не заводятся вручную — они и есть даты мероприятия. Заводить их
+ * отдельно значило бы позволить расписание на день, когда ничего
+ * не происходит, и следить за расхождением вручную.
  */
 const model = defineModel<EventSessionForm[]>({ required: true })
 
 const props = defineProps<{
-  /** Дата начала мероприятия: от неё предлагаем первый день. */
-  startsAt: string
+  /** Даты проведения: от них раскладываются дни. */
+  startDate: string
+  endDate: string
   error?: string
 }>()
 
-interface Day {
-  key: number
-  date: string
-  items: EventSessionForm[]
+/**
+ * Уже написанное — по дням, включая дни за пределами нынешних дат.
+ *
+ * Человек сдвигает даты туда-сюда, пока подбирает удобные, и терять при
+ * каждом сдвиге всё написанное нельзя. Вернул дату обратно — вернулось
+ * и расписание на неё.
+ */
+const written = ref(new Map<string, EventSessionForm[]>())
+
+for (const session of model.value) {
+  written.value.set(session.day, [...(written.value.get(session.day) ?? []), { ...session }])
 }
 
-let nextKey = 1
+/** Дни, которые мастер убрал руками: в эти даты у него ничего не идёт. */
+const dropped = ref(new Set<string>())
 
-/** Плоский список с сервера — в дни. */
-function toDays(sessions: EventSessionForm[]): Day[] {
-  const grouped = new Map<string, EventSessionForm[]>()
+const enabled = ref(model.value.length > 0)
 
-  for (const session of sessions) {
-    grouped.set(session.day, [...(grouped.get(session.day) ?? []), session])
-  }
+/** Все даты мероприятия — от начала до конца включительно. */
+const dates = computed(() => props.startDate ? daysBetween(props.startDate, props.endDate || props.startDate) : [])
 
-  return [...grouped.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, items]) => ({ key: nextKey++, date, items }))
-}
+const days = computed(() => dates.value
+  .filter(date => !dropped.value.has(date))
+  .map(date => ({ date, items: written.value.get(date) ?? [] })))
 
-const days = ref<Day[]>(toDays(model.value))
+/** Даты мероприятия, которые убрали: их можно вернуть одним нажатием. */
+const hidden = computed(() => dates.value.filter(date => dropped.value.has(date)))
 
 /**
- * Переключатель отвечает на вопрос «есть ли у мероприятия программа».
- * У часовой встречи её нет, и незачем показывать пустой конструктор дней
- * каждому, кто открыл вкладку.
+ * Наружу уходит плоский список — так его хранит сервер. Дни за пределами
+ * дат в него не попадают: они остаются только в памяти формы.
  */
-const enabled = ref(days.value.length > 0)
-
-// Наружу отдаём плоский список: пустые дни в нём просто не появляются.
-watch(days, (value) => {
-  model.value = value.flatMap(day => day.items.map(item => ({ ...item, day: day.date })))
+watch([days, enabled], () => {
+  model.value = enabled.value
+    ? days.value.flatMap(day => day.items.map(item => ({ ...item, day: day.date })))
+    : []
 }, { deep: true })
 
 watch(enabled, (on) => {
-  if (!on) {
-    days.value = []
-
-    return
+  // Включили на пустом расписании — первый день получает один пункт,
+  // чтобы было видно, что здесь заполняют.
+  if (on && !model.value.length && days.value[0] && !days.value[0].items.length) {
+    addItem(days.value[0].date)
   }
-
-  if (!days.value.length) addDay()
 })
 
-/**
- * Дата местная, а не UTC: `toISOString()` переводит полночь в часовом поясе
- * восточнее Гринвича на предыдущие сутки, и «добавить день» возвращало бы
- * ту же дату, что уже есть.
- */
-function isoDate(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
+function itemsOf(date: string): EventSessionForm[] {
+  if (!written.value.has(date)) written.value.set(date, [])
 
-  return `${date.getFullYear()}-${month}-${day}`
+  return written.value.get(date)!
 }
 
-/** Следующий день после последнего, иначе — день начала мероприятия. */
-function nextDate(): string {
-  const last = days.value.at(-1)?.date
-  const base = last ? new Date(`${last}T00:00:00`) : new Date(props.startsAt || Date.now())
-
-  if (last) base.setDate(base.getDate() + 1)
-
-  return isoDate(base)
-}
-
-function addDay(): void {
-  days.value.push({ key: nextKey++, date: nextDate(), items: [] })
-}
-
-function removeDay(index: number): void {
-  days.value.splice(index, 1)
-}
-
-function addItem(day: Day): void {
+function addItem(date: string): void {
+  const items = itemsOf(date)
   // Новый пункт начинается там, где кончился прошлый: расписание пишут
   // подряд, и выставлять время каждый раз с нуля — лишняя работа.
-  const last = day.items.at(-1)
+  const last = items.at(-1)
 
-  day.items.push({
-    day: day.date,
+  items.push({
+    day: date,
     startsAt: last?.endsAt ?? last?.startsAt ?? '10:00',
     endsAt: null,
     title: '',
     note: null
   })
+
+  written.value = new Map(written.value)
 }
 
-function removeItem(day: Day, index: number): void {
-  day.items.splice(index, 1)
+function removeItem(date: string, index: number): void {
+  itemsOf(date).splice(index, 1)
+  written.value = new Map(written.value)
+}
+
+function dropDay(date: string): void {
+  dropped.value = new Set(dropped.value).add(date)
+}
+
+function restoreDay(date: string): void {
+  const next = new Set(dropped.value)
+  next.delete(date)
+  dropped.value = next
 }
 </script>
 
@@ -115,6 +107,7 @@ function removeItem(day: Day, index: number): void {
   <div class="space-y-4">
     <USwitch
       v-model="enabled"
+      size="lg"
       label="Расписание по дням"
       description="У часовой встречи его нет, у выездной программы — это главное на странице."
     />
@@ -128,28 +121,32 @@ function removeItem(day: Day, index: number): void {
         :description="error"
       />
 
+      <p
+        v-if="!dates.length"
+        class="rounded-lg border border-dashed border-default px-4 py-6 text-center text-sm text-muted"
+      >
+        Сначала выберите даты проведения — дни расписания появятся сами.
+      </p>
+
       <div
-        v-for="(day, dayIndex) in days"
-        :key="day.key"
+        v-for="day in days"
+        :key="day.date"
         class="rounded-lg border border-default p-4"
       >
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <DateField
-              v-model="day.date"
-              size="sm"
-              class="w-56"
-            />
-            <span class="text-sm text-muted">{{ formatWeekday(day.date) }}</span>
-          </div>
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <p class="font-medium text-highlighted">
+            {{ labelDate(day.date) }}
+            <span class="font-normal text-muted">· {{ formatWeekday(day.date) }}</span>
+          </p>
 
           <UButton
-            color="error"
+            color="neutral"
             variant="ghost"
             size="sm"
-            icon="i-lucide-trash-2"
-            :aria-label="`Удалить день ${dayIndex + 1}`"
-            @click="removeDay(dayIndex)"
+            icon="i-lucide-eye-off"
+            :aria-label="`Убрать день ${labelDate(day.date)}`"
+            title="В этот день ничего не идёт"
+            @click="dropDay(day.date)"
           />
         </div>
 
@@ -157,41 +154,32 @@ function removeItem(day: Day, index: number): void {
           <div
             v-for="(item, index) in day.items"
             :key="index"
-            class="flex flex-col gap-2 sm:flex-row sm:items-start"
+            class="flex flex-col gap-2 sm:flex-row sm:items-center"
           >
             <TimeField
               v-model="item.startsAt"
               size="sm"
-              class="sm:w-32"
+              class="sm:w-30"
             />
             <TimeField
               :model-value="item.endsAt ?? ''"
               size="sm"
-              class="sm:w-32"
+              class="sm:w-30"
               @update:model-value="value => item.endsAt = value || null"
             />
-            <div class="flex-1 space-y-2">
-              <UInput
-                v-model="item.title"
-                size="sm"
-                class="w-full"
-                placeholder="Что происходит"
-              />
-              <UInput
-                :model-value="item.note ?? ''"
-                size="sm"
-                class="w-full"
-                placeholder="Уточнение — необязательно"
-                @update:model-value="value => item.note = String(value) || null"
-              />
-            </div>
+            <UInput
+              v-model="item.title"
+              size="sm"
+              class="flex-1"
+              placeholder="Что происходит"
+            />
             <UButton
               color="neutral"
               variant="ghost"
               size="sm"
               icon="i-lucide-x"
               aria-label="Убрать пункт"
-              @click="removeItem(day, index)"
+              @click="removeItem(day.date, index)"
             />
           </div>
 
@@ -209,22 +197,30 @@ function removeItem(day: Day, index: number): void {
           size="sm"
           icon="i-lucide-plus"
           class="mt-2"
-          @click="addItem(day)"
+          @click="addItem(day.date)"
         >
           Добавить пункт
         </UButton>
       </div>
 
-      <!-- Кнопка внизу, а не в шапке: день добавляют, дописав предыдущий,
-           и рука уже там. -->
-      <UButton
-        color="neutral"
-        variant="subtle"
-        icon="i-lucide-calendar-plus"
-        @click="addDay"
+      <!-- Убранные дни не исчезают совсем: передумать — обычное дело. -->
+      <div
+        v-if="hidden.length"
+        class="flex flex-wrap items-center gap-2 text-sm text-muted"
       >
-        Добавить день
-      </UButton>
+        Убраны:
+        <UButton
+          v-for="date in hidden"
+          :key="date"
+          color="neutral"
+          variant="subtle"
+          size="xs"
+          icon="i-lucide-rotate-ccw"
+          @click="restoreDay(date)"
+        >
+          {{ labelDate(date) }}
+        </UButton>
+      </div>
     </template>
   </div>
 </template>

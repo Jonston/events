@@ -215,111 +215,121 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="space-y-3">
-    <UFormField
-      label="Адрес"
-      name="location"
-      description="Начните вводить — подскажем и поставим точку."
-      :error="error"
+  <!-- Две половины, как и на остальных вкладках: слева адрес и то,
+       что выбрано, справа сама карта. -->
+  <div class="grid gap-8 lg:grid-cols-2">
+    <FormSection
+      title="Адрес"
+      description="Начните вводить — подскажем и поставим точку на карте."
     >
-      <div class="relative">
-        <UInput
-          v-model="query"
-          size="lg"
-          class="w-full"
-          placeholder="Киев, ул. Рейтарская, 12"
-          :loading="searching || resolving"
-          @blur="address = query"
-        />
+      <UFormField
+        name="location"
+        :error="error"
+      >
+        <div class="relative">
+          <UInput
+            v-model="query"
+            size="lg"
+            class="w-full"
+            placeholder="Киев, ул. Рейтарская, 12"
+            :loading="searching || resolving"
+            @blur="address = query"
+          />
 
-        <ul
-          v-if="suggestions.length"
-          class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-default bg-default shadow-lg"
-        >
-          <li
-            v-for="item in suggestions"
-            :key="item.label"
-            class="cursor-pointer px-4 py-2.5 text-sm transition-colors hover:bg-elevated"
-            @mousedown.prevent="pick(item)"
+          <ul
+            v-if="suggestions.length"
+            class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-default bg-default shadow-lg"
           >
-            {{ item.label }}
-          </li>
-        </ul>
+            <li
+              v-for="item in suggestions"
+              :key="item.label"
+              class="cursor-pointer px-4 py-2.5 text-sm transition-colors hover:bg-elevated"
+              @mousedown.prevent="pick(item)"
+            >
+              {{ item.label }}
+            </li>
+          </ul>
+        </div>
+      </UFormField>
+
+      <div class="flex flex-wrap items-center gap-3 text-sm">
+        <span
+          v-if="coords"
+          class="inline-flex items-center gap-1.5 text-muted"
+        >
+          <UIcon
+            name="i-lucide-crosshair"
+            class="size-4"
+          />
+          <span class="tabular-nums">{{ coords }}</span>
+        </span>
+        <span
+          v-else
+          class="text-dimmed"
+        >
+          Точка не выбрана — на странице мероприятия карты не будет.
+        </span>
+
+        <UButton
+          v-if="hasPoint"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          icon="i-lucide-x"
+          @click="clearPoint"
+        >
+          Убрать точку
+        </UButton>
       </div>
-    </UFormField>
+    </FormSection>
 
-    <UAlert
-      v-if="failed"
-      color="warning"
-      variant="subtle"
-      icon="i-lucide-map-pin-off"
-      :description="failed"
-    />
-
-    <div
-      v-else
-      class="relative h-112 overflow-hidden rounded-lg border border-default sm:h-[34rem]"
+    <FormSection
+      title="Точка на карте"
+      description="Подведите карту так, чтобы булавка стояла на месте встречи."
     >
-      <div
-        ref="container"
-        class="size-full"
+      <UAlert
+        v-if="failed"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-map-pin-off"
+        :description="failed"
       />
 
-      <!-- Булавка приколота к центру: она никуда не двигается, двигается
-           карта. Тень лежит ровно в выбранной точке, булавка приподнята
-           над ней на высоту иглы — пока карту тащат, выше и с тенью
-           пошире, чтобы было видно, что точка ещё не поставлена. -->
       <div
-        class="pointer-events-none absolute inset-0 flex items-center justify-center"
-        aria-hidden="true"
-      >
-        <span
-          class="absolute h-1.5 rounded-full bg-forest-950/30 transition-all"
-          :class="dragging ? 'w-4 opacity-100' : 'w-3 opacity-70'"
-        />
-        <svg
-          width="34"
-          height="34"
-          viewBox="0 0 24 24"
-          class="absolute text-coral-700 drop-shadow-md transition-transform duration-150"
-          :class="dragging ? '-translate-y-5' : '-translate-y-3.5'"
-        >
-          <path
-            fill="currentColor"
-            d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"
-          />
-        </svg>
-      </div>
-    </div>
-
-    <div class="flex flex-wrap items-center gap-3 text-sm">
-      <span
-        v-if="coords"
-        class="inline-flex items-center gap-1.5 text-muted"
-      >
-        <UIcon
-          name="i-lucide-crosshair"
-          class="size-4"
-        />
-        <span class="tabular-nums">{{ coords }}</span>
-      </span>
-      <span
         v-else
-        class="text-dimmed"
+        class="relative h-112 overflow-hidden rounded-lg border border-default"
       >
-        Точка не выбрана — на странице мероприятия карты не будет.
-      </span>
+        <div
+          ref="container"
+          class="size-full"
+        />
 
-      <UButton
-        v-if="hasPoint"
-        color="neutral"
-        variant="ghost"
-        size="xs"
-        icon="i-lucide-x"
-        @click="clearPoint"
-      >
-        Убрать точку
-      </UButton>
-    </div>
+        <!-- Булавка приколота к центру: она никуда не двигается, двигается
+             карта. Тень лежит ровно в выбранной точке, булавка приподнята
+             над ней на высоту иглы — пока карту тащат, выше и с тенью
+             пошире, чтобы было видно, что точка ещё не поставлена. -->
+        <div
+          class="pointer-events-none absolute inset-0 flex items-center justify-center"
+          aria-hidden="true"
+        >
+          <span
+            class="absolute h-1.5 rounded-full bg-forest-950/30 transition-all"
+            :class="dragging ? 'w-4 opacity-100' : 'w-3 opacity-70'"
+          />
+          <svg
+            width="34"
+            height="34"
+            viewBox="0 0 24 24"
+            class="absolute text-coral-700 drop-shadow-md transition-transform duration-150"
+            :class="dragging ? '-translate-y-5' : '-translate-y-3.5'"
+          >
+            <path
+              fill="currentColor"
+              d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"
+            />
+          </svg>
+        </div>
+      </div>
+    </FormSection>
   </div>
 </template>

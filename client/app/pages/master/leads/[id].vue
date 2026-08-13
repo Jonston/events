@@ -6,6 +6,7 @@ definePageMeta({
   middleware: ['sanctum:auth', 'role'],
   role: 'master',
   layout: 'cabinet',
+  backTo: '/master/leads',
   pageTitle: 'Заявка'
 })
 
@@ -47,16 +48,6 @@ function applySaved(saved: MasterLead): void {
     v-if="lead"
     class="max-w-3xl space-y-6"
   >
-    <UButton
-      to="/master/leads"
-      color="neutral"
-      variant="ghost"
-      icon="i-lucide-arrow-left"
-      class="-ms-2"
-    >
-      Все заявки
-    </UButton>
-
     <div class="rounded-xl border border-default p-5">
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div class="min-w-0">

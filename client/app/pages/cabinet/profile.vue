@@ -87,106 +87,103 @@ async function submit() {
 
 <template>
   <form
-    class="max-w-2xl space-y-8"
+    class="max-w-6xl"
     onsubmit="return false"
     @submit.prevent="submit"
   >
-    <section class="space-y-4">
-      <UFormField
-        label="Имя"
-        name="name"
-        required
+    <div class="grid gap-8 lg:grid-cols-2">
+      <FormSection
+        title="Кто вы"
         description="Так вас увидит мастер в заявке."
-        :error="fieldError('name')"
-      >
-        <UInput
-          v-model="name"
-          size="lg"
-          class="w-full"
-        />
-      </UFormField>
-
-      <UFormField
-        label="Почта"
-        description="Это ваш логин — сменить его пока нельзя."
-      >
-        <UInput
-          :model-value="profile?.email"
-          size="lg"
-          class="w-full"
-          disabled
-        />
-      </UFormField>
-    </section>
-
-    <USeparator />
-
-    <section class="space-y-4">
-      <div>
-        <h2 class="font-display text-xl text-highlighted">
-          Телефоны
-        </h2>
-        <p class="mt-1 text-sm text-muted">
-          Основной подставится в заявку сам. Остальные пригодятся, если
-          записываетесь не на свой номер — выберете нужный прямо в форме.
-        </p>
-      </div>
-
-      <div
-        v-for="(item, index) in phones"
-        :key="item.key"
-        class="flex flex-wrap items-start gap-3"
       >
         <UFormField
-          class="min-w-56 flex-1"
-          :name="`phones.${index}.phone`"
-          :error="fieldError(`phones.${index}.phone`)"
+          label="Имя"
+          name="name"
+          required
+          :error="fieldError('name')"
         >
           <UInput
-            v-model="item.phone"
+            v-model="name"
             size="lg"
             class="w-full"
-            placeholder="+380 (67) 123-45-67"
-            :aria-label="`Телефон ${index + 1}`"
           />
         </UFormField>
 
-        <UButton
-          :color="item.isPrimary ? 'primary' : 'neutral'"
-          :variant="item.isPrimary ? 'soft' : 'ghost'"
-          size="lg"
-          :icon="item.isPrimary ? 'i-lucide-star' : 'i-lucide-star-off'"
-          @click="makePrimary(index)"
+        <UFormField
+          label="Почта"
+          description="Это ваш логин — сменить его пока нельзя."
         >
-          {{ item.isPrimary ? 'Основной' : 'Сделать основным' }}
-        </UButton>
+          <UInput
+            :model-value="profile?.email"
+            size="lg"
+            class="w-full"
+            disabled
+          />
+        </UFormField>
+      </FormSection>
+
+      <FormSection
+        title="Телефоны"
+        description="Основной подставится в заявку сам. Остальные пригодятся, если записываетесь не на свой номер — выберете нужный прямо в форме."
+      >
+        <div
+          v-for="(item, index) in phones"
+          :key="item.key"
+          class="flex flex-wrap items-start gap-3"
+        >
+          <UFormField
+            class="min-w-56 flex-1"
+            :name="`phones.${index}.phone`"
+            :error="fieldError(`phones.${index}.phone`)"
+          >
+            <UInput
+              v-model="item.phone"
+              size="lg"
+              class="w-full"
+              placeholder="+380 (67) 123-45-67"
+              :aria-label="`Телефон ${index + 1}`"
+            />
+          </UFormField>
+
+          <UButton
+            :color="item.isPrimary ? 'primary' : 'neutral'"
+            :variant="item.isPrimary ? 'soft' : 'ghost'"
+            size="lg"
+            :icon="item.isPrimary ? 'i-lucide-star' : 'i-lucide-star-off'"
+            @click="makePrimary(index)"
+          >
+            {{ item.isPrimary ? 'Основной' : 'Сделать основным' }}
+          </UButton>
+
+          <UButton
+            color="neutral"
+            variant="ghost"
+            size="lg"
+            icon="i-lucide-trash-2"
+            :aria-label="`Убрать телефон ${index + 1}`"
+            @click="remove(index)"
+          />
+        </div>
+
+        <p
+          v-if="!phones.length"
+          class="text-sm text-dimmed"
+        >
+          Номера нет — заявку придётся заполнять руками каждый раз.
+        </p>
 
         <UButton
           color="neutral"
-          variant="ghost"
-          size="lg"
-          icon="i-lucide-trash-2"
-          :aria-label="`Убрать телефон ${index + 1}`"
-          @click="remove(index)"
-        />
-      </div>
+          variant="outline"
+          icon="i-lucide-plus"
+          @click="add"
+        >
+          Добавить номер
+        </UButton>
+      </FormSection>
+    </div>
 
-      <p
-        v-if="!phones.length"
-        class="text-sm text-dimmed"
-      >
-        Номера нет — заявку придётся заполнять руками каждый раз.
-      </p>
-
-      <UButton
-        color="neutral"
-        variant="outline"
-        icon="i-lucide-plus"
-        @click="add"
-      >
-        Добавить номер
-      </UButton>
-    </section>
+    <USeparator class="my-8" />
 
     <UButton
       type="submit"

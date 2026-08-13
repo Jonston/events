@@ -77,6 +77,16 @@ export default defineAppConfig({
         }
       }
     },
+    /*
+     * Заголовок экрана крупнее и легче: он называет место, а не кричит.
+     * Полужирный на 17-пиксельной базе спорил с заголовками разделов
+     * внутри страницы.
+     */
+    dashboardNavbar: {
+      slots: {
+        title: 'flex items-center gap-1.5 font-display text-2xl font-normal text-highlighted truncate'
+      }
+    },
     navigationMenu: {
       slots: {
         link: 'font-normal text-base text-muted',

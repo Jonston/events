@@ -76,3 +76,29 @@ export function labelDate(value: string | null | undefined): string {
     year: 'numeric'
   })
 }
+
+/**
+ * Все дни от начала до конца включительно: `2026-08-06`, `2026-08-07`, …
+ *
+ * Считаем по календарным датам, а не по миллисекундам: переход на летнее
+ * время делает сутки то 23, то 25 часов, и деление разницы на 86 400 000
+ * иногда теряет или удваивает день.
+ */
+export function daysBetween(start: string, end: string): string[] {
+  const from = parseDate(start)
+  const to = parseDate(end) ?? from
+
+  if (!from || !to || to.compare(from) < 0) return from ? [formatDateValue(from)] : []
+
+  const days: string[] = []
+
+  for (let day = from; day.compare(to) <= 0; day = day.add({ days: 1 })) {
+    days.push(formatDateValue(day))
+
+    // Страховка от опечатки в диапазоне: расписание на три года вперёд —
+    // это не программа мероприятия, а зависший цикл.
+    if (days.length > 366) break
+  }
+
+  return days
+}

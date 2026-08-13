@@ -14,8 +14,12 @@ const form = reactive({
   location: props.event?.location ?? '',
   latitude: props.event?.latitude ?? null as number | null,
   longitude: props.event?.longitude ?? null as number | null,
-  startsAt: props.event?.startsAt ?? '',
-  endsAt: props.event?.endsAt ?? '',
+  // Дата и время порознь: даты выбираются диапазоном на календаре,
+  // а часы — своими полями, и склеиваются только перед отправкой.
+  startDate: splitDateTime(props.event?.startsAt).date,
+  startTime: splitDateTime(props.event?.startsAt).time || '10:00',
+  endDate: splitDateTime(props.event?.endsAt).date,
+  endTime: splitDateTime(props.event?.endsAt).time || '18:00',
   price: props.event?.price ?? null as number | null,
   // Хранится долей, показывается процентами: «30 %» человек называет сам,
   // а «0.3» ему приходится переводить в уме.
@@ -113,8 +117,8 @@ async function submit() {
     location: form.location,
     latitude: form.latitude,
     longitude: form.longitude,
-    startsAt: form.startsAt,
-    endsAt: form.endsAt,
+    startsAt: joinDateTime(form.startDate, form.startTime),
+    endsAt: joinDateTime(form.endDate, form.endTime),
     price: form.price,
     depositRate: form.depositPercent === null ? null : form.depositPercent / 100,
     capacity: form.capacity,
@@ -163,7 +167,7 @@ async function submit() {
 
 <template>
   <form
-    class="max-w-4xl"
+    class="max-w-6xl"
     onsubmit="return false"
     @submit.prevent="submit"
   >
@@ -175,146 +179,168 @@ async function submit() {
     />
 
     <!-- ── Основное ── -->
-    <section
+    <div
       v-show="tab === 'main'"
-      class="space-y-4"
+      class="grid gap-8 lg:grid-cols-2"
     >
-      <UFormField
-        label="Название"
-        name="title"
-        required
-        :error="fieldError('title')"
+      <FormSection
+        title="О мероприятии"
+        description="Что это и для кого — то, что человек читает первым."
       >
-        <UInput
-          v-model="form.title"
-          size="lg"
-          class="w-full"
-          placeholder="Дыхание выходного дня"
-        />
-      </UFormField>
-
-      <UFormField
-        label="Короткое описание"
-        name="summary"
-        description="Одна строка под названием в каталоге."
-        :error="fieldError('summary')"
-      >
-        <UInput
-          v-model="form.summary"
-          size="lg"
-          class="w-full"
-        />
-      </UFormField>
-
-      <UFormField
-        label="Подробно"
-        name="description"
-        :error="fieldError('description')"
-      >
-        <UTextarea
-          v-model="form.description"
-          :rows="10"
-          size="lg"
-          class="w-full"
-          placeholder="Для кого это, что будет происходить, что взять с собой."
-        />
-      </UFormField>
-
-      <USeparator />
-
-      <div class="grid gap-4 sm:grid-cols-3">
         <UFormField
-          label="Стоимость, ₴"
-          name="price"
+          label="Название"
+          name="title"
           required
-          :error="fieldError('price')"
+          :error="fieldError('title')"
         >
-          <UInputNumber
-            v-model="form.price"
-            :min="0"
-            :step="100"
+          <UInput
+            v-model="form.title"
+            size="lg"
+            class="w-full"
+            placeholder="Дыхание выходного дня"
+          />
+        </UFormField>
+
+        <UFormField
+          label="Короткое описание"
+          name="summary"
+          description="Одна строка под названием в каталоге."
+          :error="fieldError('summary')"
+        >
+          <UInput
+            v-model="form.summary"
             size="lg"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Предоплата, %"
-          name="depositRate"
-          :error="fieldError('depositRate')"
+          label="Подробно"
+          name="description"
+          :error="fieldError('description')"
         >
-          <UInputNumber
-            v-model="form.depositPercent"
-            :min="0"
-            :max="100"
-            :step="5"
+          <UTextarea
+            v-model="form.description"
+            :rows="12"
             size="lg"
             class="w-full"
+            placeholder="Для кого это, что будет происходить, что взять с собой."
           />
         </UFormField>
+      </FormSection>
 
-        <UFormField
-          label="Мест в группе"
-          name="capacity"
-          :error="fieldError('capacity')"
-        >
-          <UInputNumber
-            v-model="form.capacity"
-            :min="1"
-            size="lg"
-            class="w-full"
-          />
-        </UFormField>
-      </div>
-
-      <p
-        v-if="deposit"
-        class="text-sm text-muted"
+      <FormSection
+        title="Участие"
+        description="Сколько стоит, сколько платят сразу и сколько человек берёте."
       >
-        Участник платит {{ deposit.deposit }} ₴ при бронировании и {{ deposit.rest }} ₴ на месте.
-      </p>
-    </section>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <UFormField
+            label="Стоимость, ₴"
+            name="price"
+            required
+            :error="fieldError('price')"
+          >
+            <UInputNumber
+              v-model="form.price"
+              :min="0"
+              :step="100"
+              size="lg"
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Предоплата, %"
+            name="depositRate"
+            :error="fieldError('depositRate')"
+          >
+            <UInputNumber
+              v-model="form.depositPercent"
+              :min="0"
+              :max="100"
+              :step="5"
+              size="lg"
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Мест в группе"
+            name="capacity"
+            :error="fieldError('capacity')"
+          >
+            <UInputNumber
+              v-model="form.capacity"
+              :min="1"
+              size="lg"
+              class="w-full"
+            />
+          </UFormField>
+        </div>
+
+        <p
+          v-if="deposit"
+          class="text-sm text-muted"
+        >
+          Участник платит {{ deposit.deposit }} ₴ при бронировании и {{ deposit.rest }} ₴ на месте.
+        </p>
+      </FormSection>
+    </div>
 
     <!-- ── Программа ── -->
-    <section
+    <div
       v-show="tab === 'schedule'"
-      class="space-y-5"
+      class="grid gap-8 lg:grid-cols-2"
     >
-      <div class="grid gap-4 sm:grid-cols-2">
+      <FormSection
+        title="Даты проведения"
+        description="Отметьте на календаре первый и последний день."
+      >
         <UFormField
-          label="Начало"
           name="startsAt"
-          required
-          :error="fieldError('startsAt')"
+          :error="fieldError('startsAt') ?? fieldError('endsAt')"
         >
-          <DateTimeField v-model="form.startsAt" />
-        </UFormField>
-
-        <UFormField
-          label="Окончание"
-          name="endsAt"
-          :error="fieldError('endsAt')"
-        >
-          <DateTimeField
-            v-model="form.endsAt"
-            default-time="16:00"
+          <DateRangeField
+            v-model:start="form.startDate"
+            v-model:end="form.endDate"
           />
         </UFormField>
-      </div>
 
-      <USeparator />
+        <div class="grid gap-4 sm:grid-cols-2">
+          <UFormField label="Начало дня">
+            <TimeField
+              v-model="form.startTime"
+              class="w-full"
+            />
+          </UFormField>
 
-      <MasterScheduleEditor
-        v-model="sessions"
-        :starts-at="form.startsAt"
-        :error="scheduleError"
-      />
-    </section>
+          <UFormField label="Окончание">
+            <TimeField
+              v-model="form.endTime"
+              class="w-full"
+              :disabled="!form.endDate"
+            />
+          </UFormField>
+        </div>
+      </FormSection>
+
+      <FormSection
+        title="Расписание"
+        description="Что и когда происходит внутри каждого дня."
+      >
+        <MasterScheduleEditor
+          v-model="sessions"
+          :start-date="form.startDate"
+          :end-date="form.endDate"
+          :error="scheduleError"
+        />
+      </FormSection>
+    </div>
 
     <!-- ── Локация ──
          Карта монтируется только при открытой вкладке: в скрытом
          контейнере у неё нулевой размер и пустое полотно. -->
-    <section v-show="tab === 'location'">
+    <div v-show="tab === 'location'">
       <ClientOnly>
         <MasterLocationPicker
           v-model:address="form.location"
@@ -324,103 +350,108 @@ async function submit() {
           :error="fieldError('location') ?? fieldError('latitude') ?? fieldError('longitude')"
         />
         <template #fallback>
-          <div class="h-80 animate-pulse rounded-lg bg-elevated" />
+          <div class="h-112 animate-pulse rounded-lg bg-elevated" />
         </template>
       </ClientOnly>
-    </section>
+    </div>
 
     <!-- ── Медиа ── -->
-    <section
+    <div
       v-show="tab === 'media'"
-      class="space-y-4"
+      class="grid gap-8 lg:grid-cols-2"
     >
-      <UFormField
-        label="Обложка"
-        name="image"
-        description="Необязательно. Без неё на карточке остаётся ботанический знак."
-        :error="fieldError('image')"
+      <FormSection
+        title="Обложка"
+        description="Один кадр для каталога и шапки страницы. Без него место держит ботанический знак."
       >
-        <div class="flex items-center gap-4">
-          <div class="h-32 w-44 shrink-0 overflow-hidden rounded-lg bg-elevated">
-            <img
-              v-if="imagePreview || currentImage"
-              :src="imagePreview ?? currentImage ?? undefined"
-              alt=""
-              class="size-full object-cover"
-            >
-            <BotanicalMark
-              v-else
-              class="size-full p-5 text-forest-300"
-              variant="seal"
-            />
+        <UFormField
+          name="image"
+          :error="fieldError('image')"
+        >
+          <div class="flex items-center gap-4">
+            <div class="h-32 w-44 shrink-0 overflow-hidden rounded-lg bg-elevated">
+              <img
+                v-if="imagePreview || currentImage"
+                :src="imagePreview ?? currentImage ?? undefined"
+                alt=""
+                class="size-full object-cover"
+              >
+              <BotanicalMark
+                v-else
+                class="size-full p-5 text-forest-300"
+                variant="seal"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <input
+                type="file"
+                accept="image/*"
+                class="block text-sm file:mr-3 file:rounded-md file:border-0 file:bg-elevated file:px-3 file:py-1.5 file:text-sm"
+                @change="onFile"
+              >
+              <UButton
+                v-if="currentImage || image"
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                icon="i-lucide-trash-2"
+                @click="image = null; removeImage = true"
+              >
+                Убрать обложку
+              </UButton>
+            </div>
           </div>
+        </UFormField>
+      </FormSection>
 
-          <div class="space-y-2">
-            <input
-              type="file"
-              accept="image/*"
-              class="block text-sm file:mr-3 file:rounded-md file:border-0 file:bg-elevated file:px-3 file:py-1.5 file:text-sm"
-              @change="onFile"
-            >
-            <UButton
-              v-if="currentImage || image"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              icon="i-lucide-trash-2"
-              @click="image = null; removeImage = true"
-            >
-              Убрать обложку
-            </UButton>
-          </div>
-        </div>
-      </UFormField>
-
-      <USeparator />
-
-      <UFormField
-        label="Галерея"
-        name="gallery"
+      <FormSection
+        title="Галерея"
         description="Снимки с прошлых встреч. Первый идёт крупным кадром на странице мероприятия."
       >
         <MasterEventGallery
           v-model="gallery"
           :errors="errors"
         />
-      </UFormField>
-    </section>
+      </FormSection>
+    </div>
 
     <!-- ── Общий подвал: он один на все вкладки ──
          Сохранять с каждой вкладки отдельно нельзя: мероприятие уходит
-         на сервер целиком, и кнопка на каждой вкладке обещала бы обратное. -->
-    <USeparator class="my-6" />
+         на сервер целиком, и кнопка на каждой вкладке обещала бы обратное.
+         Стоит в левой половине — там же, где начинается каждая вкладка,
+         и взгляд возвращается к нему по прямой. -->
+    <USeparator class="my-8" />
 
-    <div class="space-y-4">
-      <USwitch
-        v-model="form.isPublished"
-        label="Опубликовать на витрине"
-        description="Снятое с публикации остаётся в кабинете — его видите только вы."
-      />
+    <div class="grid lg:grid-cols-2">
+      <div class="space-y-5">
+        <USwitch
+          v-model="form.isPublished"
+          size="xl"
+          label="Опубликовать"
+          description="Снятое с публикации остаётся в кабинете — его видите только вы."
+        />
 
-      <div class="flex flex-wrap gap-3">
-        <UButton
-          type="submit"
-          color="secondary"
-          size="lg"
-          :loading="saving"
-          class="rounded-full"
-        >
-          {{ event ? 'Сохранить' : 'Создать мероприятие' }}
-        </UButton>
+        <div class="flex flex-wrap gap-3">
+          <UButton
+            type="submit"
+            color="secondary"
+            size="lg"
+            :loading="saving"
+            class="rounded-full"
+          >
+            {{ event ? 'Сохранить' : 'Создать мероприятие' }}
+          </UButton>
 
-        <UButton
-          to="/master/events"
-          color="neutral"
-          variant="ghost"
-          size="lg"
-        >
-          Отмена
-        </UButton>
+          <UButton
+            to="/master/events"
+            color="neutral"
+            variant="ghost"
+            size="lg"
+          >
+            Отмена
+          </UButton>
+        </div>
       </div>
     </div>
   </form>
