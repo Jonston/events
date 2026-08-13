@@ -38,7 +38,14 @@ const backTo = computed(() => route.meta.backTo as string | undefined)
             />
           </template>
 
+          <!-- Кнопки экрана приезжают сюда телепортом: они принадлежат
+               форме и живут её состоянием, а стоять должны в верхней
+               панели, где их ищут. -->
           <template #right>
+            <div
+              id="cabinet-actions"
+              class="flex items-center gap-3"
+            />
             <slot name="actions" />
           </template>
         </UDashboardNavbar>

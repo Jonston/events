@@ -167,7 +167,6 @@ async function submit() {
 
 <template>
   <form
-    class="max-w-6xl"
     onsubmit="return false"
     @submit.prevent="submit"
   >
@@ -350,7 +349,7 @@ async function submit() {
           :error="fieldError('location') ?? fieldError('latitude') ?? fieldError('longitude')"
         />
         <template #fallback>
-          <div class="h-112 animate-pulse rounded-lg bg-elevated" />
+          <div class="h-112 animate-pulse rounded-lg bg-elevated lg:h-[calc(100vh-19rem)]" />
         </template>
       </ClientOnly>
     </div>
@@ -416,43 +415,44 @@ async function submit() {
       </FormSection>
     </div>
 
-    <!-- ── Общий подвал: он один на все вкладки ──
-         Сохранять с каждой вкладки отдельно нельзя: мероприятие уходит
-         на сервер целиком, и кнопка на каждой вкладке обещала бы обратное.
-         Стоит в левой половине — там же, где начинается каждая вкладка,
-         и взгляд возвращается к нему по прямой. -->
-    <USeparator class="my-8" />
-
-    <div class="grid lg:grid-cols-2">
-      <div class="space-y-5">
+    <!-- ── Действия экрана ──
+         Одни на все вкладки: мероприятие уходит на сервер целиком,
+         и кнопка на каждой вкладке обещала бы обратное. Стоят в верхней
+         панели — оттуда они видны с любой вкладки и не убегают вниз
+         вместе с длинной формой. -->
+    <!-- Только на клиенте: серверная разметка телепорта уезжает мимо
+         своей цели, и после гидрации Vue пересобирает панель заново. -->
+    <ClientOnly>
+      <Teleport
+        to="#cabinet-actions"
+        defer
+      >
         <USwitch
           v-model="form.isPublished"
-          size="xl"
+          size="lg"
           label="Опубликовать"
-          description="Снятое с публикации остаётся в кабинете — его видите только вы."
         />
 
-        <div class="flex flex-wrap gap-3">
-          <UButton
-            type="submit"
-            color="secondary"
-            size="lg"
-            :loading="saving"
-            class="rounded-full"
-          >
-            {{ event ? 'Сохранить' : 'Создать мероприятие' }}
-          </UButton>
+        <UButton
+          to="/master/events"
+          color="neutral"
+          variant="ghost"
+          size="lg"
+          class="hidden sm:inline-flex"
+        >
+          Отмена
+        </UButton>
 
-          <UButton
-            to="/master/events"
-            color="neutral"
-            variant="ghost"
-            size="lg"
-          >
-            Отмена
-          </UButton>
-        </div>
-      </div>
-    </div>
+        <UButton
+          color="secondary"
+          size="lg"
+          :loading="saving"
+          class="rounded-full"
+          @click="submit"
+        >
+          {{ event ? 'Сохранить' : 'Создать' }}
+        </UButton>
+      </Teleport>
+    </ClientOnly>
   </form>
 </template>

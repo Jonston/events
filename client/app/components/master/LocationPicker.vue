@@ -297,7 +297,7 @@ onBeforeUnmount(() => {
 
       <div
         v-else
-        class="relative h-112 overflow-hidden rounded-lg border border-default"
+        class="relative h-112 overflow-hidden rounded-lg border border-default lg:h-[calc(100vh-19rem)] lg:min-h-112"
       >
         <div
           ref="container"

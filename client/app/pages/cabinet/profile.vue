@@ -87,7 +87,6 @@ async function submit() {
 
 <template>
   <form
-    class="max-w-6xl"
     onsubmit="return false"
     @submit.prevent="submit"
   >
@@ -183,16 +182,23 @@ async function submit() {
       </FormSection>
     </div>
 
-    <USeparator class="my-8" />
-
-    <UButton
-      type="submit"
-      color="secondary"
-      size="lg"
-      :loading="saving"
-      class="rounded-full"
-    >
-      Сохранить
-    </UButton>
+    <!-- Только на клиенте: серверная разметка телепорта уезжает мимо
+         своей цели, и после гидрации Vue пересобирает панель заново. -->
+    <ClientOnly>
+      <Teleport
+        to="#cabinet-actions"
+        defer
+      >
+        <UButton
+          color="secondary"
+          size="lg"
+          :loading="saving"
+          class="rounded-full"
+          @click="submit"
+        >
+          Сохранить
+        </UButton>
+      </Teleport>
+    </ClientOnly>
   </form>
 </template>

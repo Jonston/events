@@ -81,7 +81,6 @@ async function submit() {
 
 <template>
   <form
-    class="max-w-6xl"
     onsubmit="return false"
     @submit.prevent="submit"
   >
@@ -241,41 +240,42 @@ async function submit() {
       </FormSection>
     </div>
 
-    <USeparator class="my-8" />
-
-    <div class="grid lg:grid-cols-2">
-      <div class="space-y-5">
+    <!-- Только на клиенте: серверная разметка телепорта уезжает мимо
+         своей цели, и после гидрации Vue пересобирает панель заново. -->
+    <ClientOnly>
+      <Teleport
+        to="#cabinet-actions"
+        defer
+      >
         <USwitch
           v-model="form.isActive"
-          size="xl"
+          size="lg"
           label="Показывать в каталоге"
-          description="Скрытая страница не удаляется: мероприятия и отзывы остаются на месте."
         />
 
-        <div class="flex flex-wrap items-center gap-3">
-          <UButton
-            type="submit"
-            color="secondary"
-            size="lg"
-            :loading="saving"
-            class="rounded-full"
-          >
-            Сохранить
-          </UButton>
+        <UButton
+          v-if="profile?.isActive"
+          :to="profile.publicUrl"
+          target="_blank"
+          color="neutral"
+          variant="ghost"
+          size="lg"
+          trailing-icon="i-lucide-external-link"
+          class="hidden sm:inline-flex"
+        >
+          На витрине
+        </UButton>
 
-          <UButton
-            v-if="profile?.isActive"
-            :to="profile.publicUrl"
-            target="_blank"
-            color="neutral"
-            variant="ghost"
-            size="lg"
-            trailing-icon="i-lucide-external-link"
-          >
-            Посмотреть на витрине
-          </UButton>
-        </div>
-      </div>
-    </div>
+        <UButton
+          color="secondary"
+          size="lg"
+          :loading="saving"
+          class="rounded-full"
+          @click="submit"
+        >
+          Сохранить
+        </UButton>
+      </Teleport>
+    </ClientOnly>
   </form>
 </template>
