@@ -126,9 +126,68 @@ const options = computed<CalendarOptions>(() => ({
   box-shadow: none;
 }
 
+/*
+ * Клетка по умолчанию — в высоту одной строки: две записи в дне уже
+ * сворачивались в «ещё 1». Держим запас на три-четыре, чтобы месяц читался
+ * расписанием, а не схемой.
+ */
+.event-calendar :deep(.fc .fc-daygrid-day-frame) {
+  min-height: 7.5rem;
+}
+
+.event-calendar :deep(.fc .fc-daygrid-day-number) {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.event-calendar :deep(.fc .fc-col-header-cell-cushion) {
+  padding: 0.625rem 0.25rem;
+  font-weight: 600;
+}
+
+/*
+ * Полоса часа в «Неделе» ростом в 1.5em обрезала подпись. Прибавляем ровно
+ * настолько, чтобы строка помещалась: сутки и так разворачиваются целиком,
+ * и лишние пиксели множатся на 24.
+ */
+.event-calendar :deep(.fc .fc-timegrid-slot) {
+  height: 2.25rem;
+}
+
 .event-calendar :deep(.fc-event) {
   cursor: pointer;
-  padding: 1px 4px;
+  padding: 3px 6px;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.event-calendar :deep(.fc .fc-event-time) {
+  font-weight: 500;
+}
+
+/*
+ * Название переносится, а не обрезается многоточием: в клетке теперь есть
+ * запас по высоте, и «Практика на рассвете» полезнее, чем «Практика на…».
+ */
+.event-calendar :deep(.fc .fc-event-title) {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.event-calendar :deep(.fc .fc-daygrid-dot-event) {
+  align-items: flex-start;
+}
+
+.event-calendar :deep(.fc .fc-daygrid-event-dot) {
+  margin-top: 0.4em;
+}
+
+.event-calendar :deep(.fc .fc-daygrid-event) {
+  margin-block: 2px;
+}
+
+.event-calendar :deep(.fc .fc-daygrid-more-link) {
+  font-size: 0.875rem;
 }
 
 /* Заголовок панели на узком экране иначе уезжает за край. */
@@ -136,6 +195,28 @@ const options = computed<CalendarOptions>(() => ({
   .event-calendar :deep(.fc .fc-toolbar) {
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  /* Клетка в семь раз уже — тот же запас по высоте превращает месяц
+     в полотно из пустых строк. */
+  .event-calendar :deep(.fc .fc-daygrid-day-frame) {
+    min-height: 5rem;
+  }
+
+  /*
+   * В колонку шириной в палец время съедало подпись целиком: в дне
+   * оставалось «10:00» без названия. Час виден в «Неделе» и «Списком».
+   */
+  .event-calendar :deep(.fc-daygrid-event .fc-event-time) {
+    display: none;
+  }
+
+  /* Перенос в колонке шириной в три буквы ставит слово в столбик —
+     начало названия с многоточием читается лучше. */
+  .event-calendar :deep(.fc .fc-daygrid-event .fc-event-title) {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 }
 </style>

@@ -76,6 +76,21 @@ class ShowcaseTest extends TestCase
             ->assertJsonPath('data.0.title', 'Скоро');
     }
 
+    public function test_event_list_carries_the_point_on_the_map(): void
+    {
+        $master = $this->master();
+        $this->event($master, ['slug' => 'here', 'starts_at' => now()->addDay(), 'latitude' => 50.45, 'longitude' => 30.52]);
+        $this->event($master, ['slug' => 'nowhere', 'starts_at' => now()->addWeek()]);
+
+        // Без координат в списке карте мероприятий нечего рисовать, а метка
+        // без точки — это метка посреди океана.
+        $this->getJson('/api/events')
+            ->assertOk()
+            ->assertJsonPath('data.0.lat', 50.45)
+            ->assertJsonPath('data.0.lng', 30.52)
+            ->assertJsonPath('data.1.lat', null);
+    }
+
     public function test_event_page_splits_price_into_deposit_and_remainder(): void
     {
         $master = $this->master();

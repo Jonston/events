@@ -25,6 +25,18 @@ function isActive(to: string): boolean {
 }
 
 /**
+ * Буквы имени, когда снимка нет: две, заглавными. Разбор имени внутри
+ * аватара отдаёт их строчными, и в шапке рядом с прописными это читалось
+ * как опечатка.
+ */
+const initials = computed(() => (currentUser.value?.name ?? '')
+  .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map(word => word[0]!.toUpperCase())
+  .join(''))
+
+/**
  * Меню читается тремя блоками: кто я, куда я хожу, и выход.
  * Разделители несут именно это, поэтому их ровно два, а не по одному
  * между пунктами.
@@ -66,10 +78,7 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
         to="/"
         class="flex items-center gap-2.5"
       >
-        <UIcon
-          name="i-lucide-sprout"
-          class="size-6 text-forest-600"
-        />
+        <AppLogo class="size-6 text-forest-600" />
         <span class="font-display text-2xl font-medium tracking-wide text-forest-900">
           {{ appName }}
         </span>
@@ -96,21 +105,26 @@ const userMenu = computed<DropdownMenuItem[][]>(() => [
           :content="{ align: 'end', collisionPadding: 12 }"
           class="hidden md:block"
         >
-          <UButton
-            color="neutral"
-            variant="outline"
-            class="rounded-full"
-            :label="currentUser.name"
-            trailing-icon="i-lucide-chevron-down"
+          <!-- Только снимок: имя человек и так знает, а в шапке оно занимало
+               столько же места, сколько целый пункт меню. -->
+          <button
+            type="button"
+            class="rounded-full ring-forest-200 transition hover:ring-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-500 data-[state=open]:ring-2"
+            :aria-label="`Меню: ${currentUser.name}`"
           >
-            <template #leading>
-              <UAvatar
-                :src="currentUser.avatarUrl ?? undefined"
-                :alt="currentUser.name"
-                size="2xs"
-              />
-            </template>
-          </UButton>
+            <UAvatar
+              :src="currentUser.avatarUrl ?? undefined"
+              :alt="currentUser.name"
+              :text="initials"
+              size="lg"
+              :ui="{
+                // Кегль букв задаётся на корне: у аватара он идёт от размера,
+                // и на вложенном элементе его нечем перебить.
+                root: 'bg-forest-100 text-xs',
+                fallback: 'font-medium tracking-wide text-forest-800'
+              }"
+            />
+          </button>
         </UDropdownMenu>
 
         <template v-else>

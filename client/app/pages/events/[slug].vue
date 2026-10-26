@@ -4,7 +4,7 @@ import type { Photo } from '~/types'
 const route = useRoute()
 const slug = computed(() => String(route.params.slug))
 
-const { fetchEvent } = useShowcaseApi()
+const { fetchEvent, fetchEvents } = useShowcaseApi()
 const { data } = await useAsyncData(
   () => `event-${slug.value}`,
   () => fetchEvent(slug.value)
@@ -29,6 +29,17 @@ const photos = computed<Photo[]>(() => [
 
 /** Индекс открытого кадра; null — лайтбокс закрыт. */
 const openAt = ref<number | null>(null)
+
+/*
+ * Другие даты — внизу страницы: человек, который дочитал до конца и не нажал
+ * «забронировать», чаще всего ушёл из-за даты или города, а не из-за формата.
+ * Каталог грузится отдельно и позже — он не должен задерживать саму страницу.
+ */
+const { data: catalog } = await useAsyncData('events', fetchEvents, { lazy: true })
+
+const nearby = computed(
+  () => (catalog.value?.data ?? []).filter(item => item.slug !== slug.value)
+)
 
 useHead({ title: () => event.value.title })
 </script>
@@ -260,5 +271,19 @@ useHead({ title: () => event.value.title })
         </aside>
       </div>
     </div>
+
+    <!-- Лента выходит за поле страницы, поэтому стоит вне контейнера. -->
+    <ShowcaseCarousel
+      v-slot="{ item }"
+      :items="nearby"
+      title="Ближайшие мероприятия"
+      to="/events"
+      class="border-t border-forest-100 py-11"
+    >
+      <ShowcaseEventCard
+        :event="item"
+        class="h-full"
+      />
+    </ShowcaseCarousel>
   </div>
 </template>

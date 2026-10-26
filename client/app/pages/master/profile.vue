@@ -27,9 +27,7 @@ const removePhoto = ref(false)
 const removeCover = ref(false)
 
 const photoPreview = computed(() => photo.value ? URL.createObjectURL(photo.value) : null)
-const coverPreview = computed(() => cover.value ? URL.createObjectURL(cover.value) : null)
 const currentPhoto = computed(() => removePhoto.value ? null : (profile.value?.photo ?? null))
-const currentCover = computed(() => removeCover.value ? null : (profile.value?.cover ?? null))
 
 const saving = ref(false)
 const errors = ref<ValidationErrors>({})
@@ -47,7 +45,6 @@ function pick(target: Ref<File | null>, flag: Ref<boolean>) {
 }
 
 const onPhoto = pick(photo, removePhoto)
-const onCover = pick(cover, removeCover)
 
 async function submit() {
   saving.value = true
@@ -198,45 +195,15 @@ async function submit() {
           </div>
         </UFormField>
 
-        <UFormField
+        <MasterCoverField
+          v-model:file="cover"
+          v-model:remove="removeCover"
+          :current="profile?.cover"
+          :seed="profile?.id"
           label="Обложка"
           name="cover"
           :error="fieldError('cover')"
-        >
-          <div class="space-y-3">
-            <div class="h-36 overflow-hidden rounded-lg bg-forest-950">
-              <img
-                v-if="coverPreview || currentCover"
-                :src="coverPreview ?? currentCover ?? undefined"
-                alt=""
-                class="size-full object-cover"
-              >
-              <BotanicalScene
-                v-else
-                :seed="profile?.id ?? 1"
-                class="size-full"
-              />
-            </div>
-            <div class="flex items-center gap-3">
-              <input
-                type="file"
-                accept="image/*"
-                class="block text-sm file:mr-3 file:rounded-md file:border-0 file:bg-elevated file:px-3 file:py-1.5 file:text-sm"
-                @change="onCover"
-              >
-              <UButton
-                v-if="currentCover || cover"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                icon="i-lucide-trash-2"
-                @click="cover = null; removeCover = true"
-              >
-                Убрать
-              </UButton>
-            </div>
-          </div>
-        </UFormField>
+        />
       </FormSection>
     </div>
 

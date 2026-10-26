@@ -212,33 +212,18 @@ const steps = [
     </section>
 
     <!-- ── Ближайшие мероприятия ── -->
-    <section
-      v-if="rest.length"
-      class="mx-auto max-w-page px-6 py-16"
+    <ShowcaseCarousel
+      v-slot="{ item }"
+      :items="rest"
+      title="Ближайшие мероприятия"
+      to="/events"
+      class="py-12"
     >
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <h2 class="font-display text-3xl tracking-tight text-forest-900 sm:text-4xl">
-          Ближайшие мероприятия
-        </h2>
-        <UButton
-          to="/events"
-          color="primary"
-          variant="outline"
-          trailing-icon="i-lucide-arrow-right"
-          class="rounded-full"
-        >
-          Смотреть все
-        </UButton>
-      </div>
-
-      <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <ShowcaseEventCard
-          v-for="event in rest"
-          :key="event.id"
-          :event="event"
-        />
-      </div>
-    </section>
+      <ShowcaseEventCard
+        :event="item"
+        class="h-full"
+      />
+    </ShowcaseCarousel>
 
     <!-- ── Как это устроено ──
          Нумерация здесь заслужена: это последовательность, а не список —
@@ -294,33 +279,19 @@ const steps = [
     </section>
 
     <!-- ── Мастера ── -->
-    <section
-      v-if="masters.length"
-      class="mx-auto max-w-page px-6 py-16"
+    <ShowcaseCarousel
+      v-slot="{ item }"
+      :items="masters"
+      title="Мастера площадки"
+      to="/masters"
+      to-label="Смотреть всех"
+      class="py-12"
     >
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <h2 class="font-display text-3xl tracking-tight text-forest-900 sm:text-4xl">
-          Мастера площадки
-        </h2>
-        <UButton
-          to="/masters"
-          color="primary"
-          variant="outline"
-          trailing-icon="i-lucide-arrow-right"
-          class="rounded-full"
-        >
-          Смотреть всех
-        </UButton>
-      </div>
-
-      <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <ShowcaseMasterCard
-          v-for="master in masters"
-          :key="master.id"
-          :master="master"
-        />
-      </div>
-    </section>
+      <ShowcaseMasterCard
+        :master="item"
+        class="h-full"
+      />
+    </ShowcaseCarousel>
   </div>
 </template>
 

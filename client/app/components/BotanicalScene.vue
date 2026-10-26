@@ -326,12 +326,20 @@ const rays = computed(() => {
         />
       </linearGradient>
 
+      <!--
+        color-interpolation-filters по умолчанию — linearRGB: браузер
+        переводит всю область фильтра в линейное пространство и обратно,
+        и на этих размерах перевод стоит дороже самого размытия. В sRGB
+        размытие чуть контрастнее — на глаз разницы нет, а кадров
+        в карусели становится в полтора раза больше.
+      -->
       <filter
         :id="`ray-blur-${uid}`"
         x="-60%"
         y="-30%"
         width="220%"
         height="160%"
+        color-interpolation-filters="sRGB"
       >
         <feGaussianBlur stdDeviation="17" />
       </filter>
@@ -342,6 +350,7 @@ const rays = computed(() => {
         y="0"
         width="100%"
         height="100%"
+        color-interpolation-filters="sRGB"
       >
         <feTurbulence
           type="fractalNoise"
@@ -363,6 +372,7 @@ const rays = computed(() => {
         y="-20%"
         width="140%"
         height="140%"
+        color-interpolation-filters="sRGB"
       >
         <feGaussianBlur :stdDeviation="layer.blur" />
       </filter>

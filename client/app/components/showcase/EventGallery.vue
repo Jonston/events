@@ -51,6 +51,7 @@ const emit = defineEmits<{ open: [index: number] }>()
   <UCarousel
     v-else-if="photos.length"
     v-slot="{ item, index }"
+    v-bind="carouselArrows"
     :items="photos"
     arrows
     dots
@@ -60,8 +61,8 @@ const emit = defineEmits<{ open: [index: number] }>()
     :contain-scroll="false"
     :ui="{
       item: 'basis-[82%] sm:basis-[72%] lg:basis-[66%] opacity-45 transition-opacity duration-500 ease-out [&.is-snapped]:opacity-100',
-      prev: 'start-3 sm:start-4 size-11 bg-white/90 text-forest-800 ring-1 ring-forest-100 shadow-[0_6px_18px_-8px] shadow-forest-900/40 backdrop-blur-sm hover:bg-white hover:text-coral-700 disabled:bg-white/70',
-      next: 'end-3 sm:end-4 size-11 bg-white/90 text-forest-800 ring-1 ring-forest-100 shadow-[0_6px_18px_-8px] shadow-forest-900/40 backdrop-blur-sm hover:bg-white hover:text-coral-700 disabled:bg-white/70',
+      prev: `start-3 sm:start-4 ${SHAPE}`,
+      next: `end-3 sm:end-4 ${SHAPE}`,
       dots: 'inset-x-0 bottom-4 gap-2',
       dot: 'size-2.5 bg-white/60 ring-1 ring-forest-900/10 transition-[background-color,width] data-[state=active]:w-6 data-[state=active]:bg-white'
     }"

@@ -22,10 +22,7 @@ const socials = ['Instagram', 'Telegram', 'YouTube']
       <div class="grid gap-8 pb-10 sm:grid-cols-2 lg:grid-cols-4">
         <div class="space-y-4">
           <div class="flex items-center gap-2.5">
-            <UIcon
-              name="i-lucide-sprout"
-              class="size-6 text-forest-400"
-            />
+            <AppLogo class="size-6 text-forest-400" />
             <span class="font-display text-2xl text-white">{{ appName }}</span>
           </div>
           <p class="max-w-xs leading-relaxed">

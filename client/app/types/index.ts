@@ -72,11 +72,16 @@ export interface EventCard {
   startsAt: string
   endsAt: string | null
   location: string | null
+  /** Точка на карте; null — мастер её не ставил. */
+  lat: number | null
+  lng: number | null
   price: number
   priceFormatted: string
   masterId: number | null
   masterName: string | null
   masterSlug: string | null
+  /** Портрет ведущего: карточка показывает его так же, как карточка мастера. */
+  masterPhoto: string | null
 }
 
 export interface Review {

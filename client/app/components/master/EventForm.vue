@@ -46,8 +46,6 @@ const gallery = ref<GalleryItem[]>(
 
 const image = ref<File | null>(null)
 const removeImage = ref(false)
-const imagePreview = computed(() => image.value ? URL.createObjectURL(image.value) : null)
-const currentImage = computed(() => removeImage.value ? null : (props.event?.image ?? null))
 
 const saving = ref(false)
 const errors = ref<ValidationErrors>({})
@@ -99,12 +97,6 @@ const deposit = computed(() => {
 
   return { deposit: amount, rest: Math.round(form.price - amount) }
 })
-
-function onFile(event: Event): void {
-  const file = (event.target as HTMLInputElement).files?.[0] ?? null
-  image.value = file
-  if (file) removeImage.value = false
-}
 
 async function submit() {
   saving.value = true
@@ -363,45 +355,14 @@ async function submit() {
         title="Обложка"
         description="Один кадр для каталога и шапки страницы. Без него место держит ботанический знак."
       >
-        <UFormField
+        <MasterCoverField
+          v-model:file="image"
+          v-model:remove="removeImage"
+          :current="event?.image"
+          :seed="event?.id"
           name="image"
           :error="fieldError('image')"
-        >
-          <div class="flex items-center gap-4">
-            <div class="h-32 w-44 shrink-0 overflow-hidden rounded-lg bg-elevated">
-              <img
-                v-if="imagePreview || currentImage"
-                :src="imagePreview ?? currentImage ?? undefined"
-                alt=""
-                class="size-full object-cover"
-              >
-              <BotanicalMark
-                v-else
-                class="size-full p-5 text-forest-300"
-                variant="seal"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <input
-                type="file"
-                accept="image/*"
-                class="block text-sm file:mr-3 file:rounded-md file:border-0 file:bg-elevated file:px-3 file:py-1.5 file:text-sm"
-                @change="onFile"
-              >
-              <UButton
-                v-if="currentImage || image"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                icon="i-lucide-trash-2"
-                @click="image = null; removeImage = true"
-              >
-                Убрать обложку
-              </UButton>
-            </div>
-          </div>
-        </UFormField>
+        />
       </FormSection>
 
       <FormSection

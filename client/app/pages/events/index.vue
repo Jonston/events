@@ -9,36 +9,41 @@ const events = computed(() => data.value?.data ?? [])
 
 <template>
   <div>
-    <div class="border-b border-forest-100 bg-gradient-to-b from-forest-50/70 to-paper">
-      <div class="mx-auto max-w-page px-6 py-11">
-        <header class="max-w-2xl">
-          <h1 class="text-balance font-display text-4xl tracking-tight text-forest-900 sm:text-5xl">
-            Ближайшие мероприятия
-          </h1>
-          <p class="mt-3 text-lg leading-relaxed text-stone-600">
-            Занятия, консультации и выездные ретриты с открытым набором. Стоимость
-            указана полностью — участие подтверждается предоплатой.
-          </p>
-        </header>
-      </div>
-    </div>
+    <PageSection class="border-b border-forest-100 bg-gradient-to-b from-forest-50/70 to-paper py-11">
+      <header class="max-w-2xl">
+        <h1 class="text-balance font-display text-4xl tracking-tight text-forest-900 sm:text-5xl">
+          Ближайшие мероприятия
+        </h1>
+        <p class="mt-3 text-lg leading-relaxed text-stone-600">
+          Занятия, консультации и выездные ретриты с открытым набором. Стоимость
+          указана полностью — участие подтверждается предоплатой.
+        </p>
+      </header>
+    </PageSection>
 
-    <div class="mx-auto max-w-page px-6 py-11">
-      <div
-        v-if="events.length"
-        class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-      >
+    <!-- Карта первой, список под ней: «где» на этой странице — вопрос
+         наравне с «когда», а из строки адреса расстояние не читается.
+         Лентой здесь не обойтись: каталог показывает всё сразу. -->
+    <PageSection
+      v-if="events.length"
+      class="py-9"
+    >
+      <ShowcaseEventMap :events="events" />
+
+      <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <ShowcaseEventCard
           v-for="event in events"
           :key="event.id"
           :event="event"
         />
       </div>
+    </PageSection>
 
-      <div
-        v-else
-        class="rounded-3xl bg-white px-6 py-14 text-center ring-1 ring-forest-100"
-      >
+    <PageSection
+      v-else
+      class="py-11"
+    >
+      <div class="rounded-3xl bg-white px-6 py-14 text-center ring-1 ring-forest-100">
         <BotanicalMark
           class="mx-auto size-24 text-forest-300"
           variant="seal"
@@ -51,6 +56,6 @@ const events = computed(() => data.value?.data ?? [])
           напрямую — он сообщит о старте набора.
         </p>
       </div>
-    </div>
+    </PageSection>
   </div>
 </template>

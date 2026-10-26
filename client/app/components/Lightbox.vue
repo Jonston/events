@@ -76,11 +76,11 @@ onBeforeUnmount(() => {
             class="tabular-nums"
           >{{ (index ?? 0) + 1 }} / {{ items.length }}</span>
         </p>
+        <!-- `ghost` давал тёмный значок на почти чёрном фоне: кнопка была
+             на месте, но найти её удавалось только курсором. -->
         <UButton
-          color="neutral"
-          variant="ghost"
+          v-bind="carouselArrow"
           icon="i-lucide-x"
-          size="lg"
           autofocus
           aria-label="Закрыть просмотр"
           @click="close"
@@ -94,10 +94,8 @@ onBeforeUnmount(() => {
       >
         <UButton
           v-if="hasMany"
+          v-bind="carouselArrow"
           class="absolute left-1 top-1/2 -translate-y-1/2 sm:left-4"
-          color="neutral"
-          variant="soft"
-          size="xl"
           icon="i-lucide-chevron-left"
           aria-label="Предыдущий снимок"
           @click="go(-1)"
@@ -111,10 +109,8 @@ onBeforeUnmount(() => {
 
         <UButton
           v-if="hasMany"
+          v-bind="carouselArrow"
           class="absolute right-1 top-1/2 -translate-y-1/2 sm:right-4"
-          color="neutral"
-          variant="soft"
-          size="xl"
           icon="i-lucide-chevron-right"
           aria-label="Следующий снимок"
           @click="go(1)"

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\UserRole;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Cabinet\AssistantController;
 use App\Http\Controllers\Api\Cabinet\ProfileController as CabinetProfileController;
 use App\Http\Controllers\Api\Master\EventController as MasterEventController;
 use App\Http\Controllers\Api\Master\LeadController as MasterLeadController;
@@ -74,6 +75,17 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->group(function (): void {
             Route::get('/profile', [CabinetProfileController::class, 'show'])->name('profile.show');
             Route::put('/profile', [CabinetProfileController::class, 'update'])->name('profile.update');
+
+            /*
+             * Помощник кабинета. Ограничение построже прочего: каждый вопрос —
+             * платный запрос к модели, и вкладка, зациклившаяся на отправке,
+             * не должна выливаться в счёт.
+             */
+            Route::get('/assistant', [AssistantController::class, 'history'])->name('assistant.history');
+            Route::post('/assistant', [AssistantController::class, 'prompt'])
+                ->middleware('throttle:20,1')
+                ->name('assistant.prompt');
+            Route::delete('/assistant', [AssistantController::class, 'destroy'])->name('assistant.destroy');
         });
 
     /*

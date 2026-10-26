@@ -26,11 +26,16 @@ class EventCardData extends Data
         public string $startsAt,
         public ?string $endsAt,
         public ?string $location,
+        /** Точка на карте; null — мастер её не ставил. */
+        public ?float $lat,
+        public ?float $lng,
         public float $price,
         public string $priceFormatted,
         public ?int $masterId,
         public ?string $masterName,
         public ?string $masterSlug,
+        /** Портрет ведущего: карточка мероприятия показывает его так же, как карточка мастера. */
+        public ?string $masterPhoto,
     ) {}
 
     public static function fromModel(Event $event): self
@@ -44,11 +49,14 @@ class EventCardData extends Data
             startsAt: $event->starts_at->toIso8601String(),
             endsAt: $event->ends_at?->toIso8601String(),
             location: $event->location,
+            lat: $event->latitude === null ? null : (float) $event->latitude,
+            lng: $event->longitude === null ? null : (float) $event->longitude,
             price: (float) $event->price,
             priceFormatted: self::money((float) $event->price),
             masterId: $event->master?->id,
             masterName: $event->master?->name,
             masterSlug: $event->master?->slug,
+            masterPhoto: $event->master?->photoUrl(),
         );
     }
 

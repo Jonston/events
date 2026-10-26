@@ -73,10 +73,7 @@ async function handleLogin() {
   <UCard>
     <template #header>
       <div class="text-center">
-        <UIcon
-          name="i-lucide-sprout"
-          class="size-8 text-primary"
-        />
+        <AppLogo class="mx-auto size-8 text-primary" />
         <h1 class="mt-2 font-display text-2xl font-bold text-highlighted">
           {{ appName }}
         </h1>

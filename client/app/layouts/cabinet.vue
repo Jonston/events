@@ -47,6 +47,10 @@ const backTo = computed(() => route.meta.backTo as string | undefined)
               class="flex items-center gap-3"
             />
             <slot name="actions" />
+
+            <!-- Помощник последним в ряду: он спутник любого экрана,
+                 а не кнопка текущего, и не должен вклиниваться в его действия. -->
+            <CabinetAssistantPanel />
           </template>
         </UDashboardNavbar>
       </template>

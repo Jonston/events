@@ -132,35 +132,35 @@ const contactOpen = ref(false)
       </div>
     </header>
 
-    <div class="mx-auto max-w-page px-6 py-11">
-      <p
-        v-if="data?.bio"
-        class="max-w-[68ch] whitespace-pre-line text-lg leading-relaxed text-stone-700"
-      >
+    <PageSection
+      v-if="data?.bio"
+      class="pt-11"
+    >
+      <p class="max-w-[68ch] whitespace-pre-line text-lg leading-relaxed text-stone-700">
         {{ data.bio }}
       </p>
+    </PageSection>
 
-      <section class="mt-10">
+    <ShowcaseCarousel
+      v-slot="{ item }"
+      :items="events"
+      title="Ближайшие мероприятия"
+      class="pt-8"
+    >
+      <ShowcaseEventCard
+        :event="item"
+        :show-master="false"
+        class="h-full"
+      />
+    </ShowcaseCarousel>
+
+    <PageSection class="py-11">
+      <section v-if="!events.length">
         <h2 class="font-display text-3xl text-forest-900">
           Ближайшие мероприятия
         </h2>
 
-        <div
-          v-if="events.length"
-          class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          <ShowcaseEventCard
-            v-for="event in events"
-            :key="event.id"
-            :event="event"
-            :show-master="false"
-          />
-        </div>
-
-        <div
-          v-else
-          class="mt-6 rounded-2xl bg-white px-6 py-10 text-center ring-1 ring-forest-100"
-        >
+        <div class="mt-6 rounded-2xl bg-white px-6 py-10 text-center ring-1 ring-forest-100">
           <BotanicalMark
             class="mx-auto size-20 text-forest-300"
             variant="seal"
@@ -183,9 +183,11 @@ const contactOpen = ref(false)
            Раздел появляется, когда в нём есть что читать. Пустой блок
            «отзывов пока нет» — это строка, которую посетитель читает
            на каждой странице и ни разу не использует. -->
+      <!-- Отступ сверху — только когда над отзывами что-то есть: при
+           заполненном расписании пустого блока с датами не бывает. -->
       <section
         v-if="reviews.length"
-        class="mt-12"
+        class="mt-12 first:mt-0"
       >
         <h2 class="font-display text-3xl text-forest-900">
           Отзывы
@@ -217,7 +219,7 @@ const contactOpen = ref(false)
           </li>
         </ul>
       </section>
-    </div>
+    </PageSection>
 
     <UModal
       v-model:open="contactOpen"

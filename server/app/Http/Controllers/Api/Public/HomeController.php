@@ -20,7 +20,12 @@ class HomeController extends Controller
 {
     private const MASTERS_LIMIT = 6;
 
-    private const EVENTS_LIMIT = 4;
+    /**
+     * Одна дата уходит в шапку, остальные — в ленту во всю ширину: на широком
+     * экране она держит пять карточек, и присылать четыре значит показывать
+     * ленту растянутых.
+     */
+    private const EVENTS_LIMIT = 9;
 
     public function __invoke(): JsonResponse
     {
